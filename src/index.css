@@ -75,12 +75,15 @@ body {
   align-items: center;
   position: relative;
   background-color: var(--bg-color); /* Fallback */
-  background: radial-gradient(circle at center, var(--bg-color) 0%, #032115 100%);
+  background-image: url('/bg-login.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   overflow: hidden;
 }
 
 :root[data-theme='light'] .login-layout {
-  background: radial-gradient(circle at center, #F0FDF9 0%, #D1FAE5 100%);
+  background-image: url('/bg-login.png');
 }
 
 .bg-grid-overlay {
@@ -174,10 +177,10 @@ body {
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 24px;
   padding: 3rem;
   width: 100%;
@@ -191,7 +194,7 @@ body {
 }
 
 :root[data-theme='dark'] .glass-card {
-  background: rgba(22, 27, 34, 0.7);
+  background: rgba(22, 27, 34, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }

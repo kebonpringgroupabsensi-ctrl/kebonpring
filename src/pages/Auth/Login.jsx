@@ -135,15 +135,6 @@ export default function Login() {
 
   return (
     <div className="login-layout">
-      {/* Animated Background Elements */}
-      <div className="bg-grid-overlay"></div>
-      <div className="ambient-light"></div>
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
-      <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
-      
-
       <div className="auth-container">
         <div className="glass-card">
           <div className="brand-header">
