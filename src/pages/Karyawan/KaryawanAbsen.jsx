@@ -28,7 +28,7 @@ export default function KaryawanAbsen() {
   const [now, setNow] = useState(new Date());
 
   const isFaceRegistered = user?.face_registered || false;
-  const hasShift = shift?.shifts?.shift_type !== undefined;
+  const hasShift = !!shift && !!shift.shifts;
   const isNonShift = !hasShift;
 
   useEffect(() => {
@@ -152,6 +152,17 @@ export default function KaryawanAbsen() {
         </div>
       )}
 
+      {/* Day Off Warning */}
+      {!hasShift && !loading && (
+        <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <AlertCircle size={20} style={{ color: '#3b82f6', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: '700', color: '#3b82f6', fontSize: '0.9rem' }}>Hari Libur / Tidak Ada Jadwal</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Anda tidak memiliki jadwal kerja hari ini. Tombol absen dinonaktifkan.</div>
+          </div>
+        </div>
+      )}
+
       {/* Message */}
       {message && (
         <div style={{
@@ -242,12 +253,12 @@ export default function KaryawanAbsen() {
         {!attendance && (
           <button
             onClick={() => handleAction('check_in')}
-            disabled={actionLoading || !location}
+            disabled={actionLoading || !location || !hasShift}
             style={{
               background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '14px',
               padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-              opacity: (!location || actionLoading) ? 0.7 : 1,
+              opacity: (!location || actionLoading || !hasShift) ? 0.7 : 1,
             }}
           >
             {actionLoading && pendingAction === 'check_in' ? <div className="loader" style={{ width: '20px', height: '20px', borderColor: '#fff' }} /> : <><ScanFace size={22} /> Check In</>}

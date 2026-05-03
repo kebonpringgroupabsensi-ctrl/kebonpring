@@ -15,11 +15,11 @@ export default function SAPengaturan() {
   const [form, setForm] = useState({
     company_name: 'Warung Request',
     company_address: '',
-    check_in_start: '05:00',
-    check_in_end: '12:00',
-    check_out_start: '14:00',
-    check_out_end: '23:59',
-    max_radius_meters: '100',
+    check_in_before_hours: '1',
+    check_in_after_hours: '4',
+    check_out_before_hours: '1',
+    check_out_after_hours: '4',
+    max_radius_meters: '50',
     working_days: '["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"]',
   });
 
@@ -39,10 +39,10 @@ export default function SAPengaturan() {
         ...prev,
         company_name: s.company_name || prev.company_name,
         company_address: s.company_address || prev.company_address,
-        check_in_start: s.check_in_start || prev.check_in_start,
-        check_in_end: s.check_in_end || prev.check_in_end,
-        check_out_start: s.check_out_start || prev.check_out_start,
-        check_out_end: s.check_out_end || prev.check_out_end,
+        check_in_before_hours: s.check_in_before_hours || prev.check_in_before_hours,
+        check_in_after_hours: s.check_in_after_hours || prev.check_in_after_hours,
+        check_out_before_hours: s.check_out_before_hours || prev.check_out_before_hours,
+        check_out_after_hours: s.check_out_after_hours || prev.check_out_after_hours,
         max_radius_meters: s.max_radius_meters || prev.max_radius_meters,
       }));
     } catch (err) {
@@ -125,20 +125,24 @@ export default function SAPengaturan() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Mulai Check-In</label>
-              <input className="form-input" type="time" value={form.check_in_start} onChange={e => setForm({ ...form, check_in_start: e.target.value })} />
+              <label className="form-label">Mulai Check-In (Jam sebelum masuk)</label>
+              <input className="form-input" type="number" step="0.5" value={form.check_in_before_hours} onChange={e => setForm({ ...form, check_in_before_hours: e.target.value })} placeholder="Contoh: 1" />
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Berapa jam sebelum shift dimulai karyawan sudah bisa absen masuk.</p>
             </div>
             <div className="form-group">
-              <label className="form-label">Batas Check-In</label>
-              <input className="form-input" type="time" value={form.check_in_end} onChange={e => setForm({ ...form, check_in_end: e.target.value })} />
+              <label className="form-label">Batas Akhir Check-In (Jam setelah masuk)</label>
+              <input className="form-input" type="number" step="0.5" value={form.check_in_after_hours} onChange={e => setForm({ ...form, check_in_after_hours: e.target.value })} placeholder="Contoh: 4" />
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Batas waktu maksimal keterlambatan untuk absen masuk.</p>
             </div>
             <div className="form-group">
-              <label className="form-label">Mulai Check-Out</label>
-              <input className="form-input" type="time" value={form.check_out_start} onChange={e => setForm({ ...form, check_out_start: e.target.value })} />
+              <label className="form-label">Mulai Check-Out (Jam sebelum pulang)</label>
+              <input className="form-input" type="number" step="0.5" value={form.check_out_before_hours} onChange={e => setForm({ ...form, check_out_before_hours: e.target.value })} placeholder="Contoh: 1" />
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Berapa jam sebelum shift berakhir karyawan sudah bisa absen pulang.</p>
             </div>
             <div className="form-group">
-              <label className="form-label">Batas Check-Out</label>
-              <input className="form-input" type="time" value={form.check_out_end} onChange={e => setForm({ ...form, check_out_end: e.target.value })} />
+              <label className="form-label">Batas Akhir Check-Out (Jam setelah pulang)</label>
+              <input className="form-input" type="number" step="0.5" value={form.check_out_after_hours} onChange={e => setForm({ ...form, check_out_after_hours: e.target.value })} placeholder="Contoh: 4" />
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Batas waktu maksimal untuk absen pulang.</p>
             </div>
             <div className="form-group">
               <label className="form-label">Radius Maksimum Absen (meter)</label>

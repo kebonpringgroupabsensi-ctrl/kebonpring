@@ -139,30 +139,61 @@ router.post('/check-in', async (req, res) => {
       }
     }
 
+    // Get settings for windows
+    const { data: settingsList } = await supabaseAdmin.from('app_settings').select('*');
+    const settings = {};
+    settingsList?.forEach(s => settings[s.key] = s.value);
+
     // Get today's shift assignment
     const { data: assignment } = await supabaseAdmin
       .from('shift_assignments')
-      .select('shift_id, shifts(start_time, late_tolerance_minutes)')
+      .select('shift_id, shifts(*)')
       .eq('employee_id', profile.id)
       .eq('date', today)
       .maybeSingle();
 
-    // Calculate lateness
+    if (!assignment) {
+      return res.status(400).json({ error: 'Anda tidak memiliki jadwal kerja hari ini (Libur/Day Off).' });
+    }
+
     const now = new Date();
     let isLate = false;
     let lateMinutes = 0;
 
-    if (assignment?.shifts) {
-      const [shiftHour, shiftMin] = assignment.shifts.start_time.split(':').map(Number);
-      const shiftStart = new Date();
-      shiftStart.setHours(shiftHour, shiftMin, 0, 0);
+    if (assignment.shifts) {
+      const [sH, sM] = assignment.shifts.start_time.split(':').map(Number);
+      const shiftStart = new Date(now);
+      shiftStart.setHours(sH, sM, 0, 0);
 
+      // Validate Window
+      const beforeHours = parseFloat(settings.check_in_before_hours || 1);
+      const afterHours = parseFloat(settings.check_in_after_hours || 4);
+      
+      const winStart = new Date(shiftStart);
+      winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
+      
+      const winEnd = new Date(shiftStart);
+      winEnd.setMinutes(winEnd.getMinutes() + (afterHours * 60));
+
+      if (now < winStart) {
+        return res.status(400).json({ 
+          error: `Belum waktunya absen masuk. Absen dibuka mulai pukul ${winStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+        });
+      }
+      if (now > winEnd) {
+        return res.status(400).json({ 
+          error: `Batas waktu absen masuk telah berakhir pada pukul ${winEnd.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+        });
+      }
+
+      // Calculate lateness (considering tolerance)
       const tolerance = assignment.shifts.late_tolerance_minutes || 0;
-      shiftStart.setMinutes(shiftStart.getMinutes() + tolerance);
+      const shiftStartWithTolerance = new Date(shiftStart);
+      shiftStartWithTolerance.setMinutes(shiftStartWithTolerance.getMinutes() + tolerance);
 
-      if (now > shiftStart) {
+      if (now > shiftStartWithTolerance) {
         isLate = true;
-        lateMinutes = Math.round((now - shiftStart) / 60000);
+        lateMinutes = Math.round((now - shiftStartWithTolerance) / 60000);
       }
     }
 
@@ -325,7 +356,7 @@ router.post('/check-out', async (req, res) => {
     const checkIn = new Date(attendance.check_in_time);
     const totalWorkMinutes = Math.round((now - checkIn) / 60000) - (attendance.total_break_minutes || 0);
 
-    // Get shift info for early leave check
+    // Get shift info for early leave check and windows
     const { data: assignment } = await supabaseAdmin
       .from('shift_assignments')
       .select('shifts(*)')
@@ -335,10 +366,38 @@ router.post('/check-out', async (req, res) => {
 
     let isEarlyLeave = false;
     let earlyLeaveMinutes = 0;
-    if (assignment?.shifts?.end_time) {
-      const [h, m] = assignment.shifts.end_time.split(':').map(Number);
+
+    if (assignment?.shifts) {
+      // Get settings for windows
+      const { data: settingsList } = await supabaseAdmin.from('app_settings').select('*');
+      const settings = {};
+      settingsList?.forEach(s => settings[s.key] = s.value);
+
+      const [eH, eM] = assignment.shifts.end_time.split(':').map(Number);
       const shiftEnd = new Date(now);
-      shiftEnd.setHours(h, m, 0, 0);
+      shiftEnd.setHours(eH, eM, 0, 0);
+
+      // Validate Window
+      const beforeHours = parseFloat(settings.check_out_before_hours || 1);
+      const afterHours = parseFloat(settings.check_out_after_hours || 4);
+      
+      const winStart = new Date(shiftEnd);
+      winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
+      
+      const winEnd = new Date(shiftEnd);
+      winEnd.setMinutes(winEnd.getMinutes() + (afterHours * 60));
+
+      if (now < winStart) {
+        return res.status(400).json({ 
+          error: `Belum waktunya absen pulang. Absen dibuka mulai pukul ${winStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+        });
+      }
+      if (now > winEnd) {
+        return res.status(400).json({ 
+          error: `Batas waktu absen pulang telah berakhir pada pukul ${winEnd.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+        });
+      }
+
       if (now < shiftEnd) {
         isEarlyLeave = true;
         earlyLeaveMinutes = Math.round((shiftEnd - now) / 60000);
