@@ -75,15 +75,35 @@ body {
   align-items: center;
   position: relative;
   background-color: var(--bg-color); /* Fallback */
-  background-image: url('/bg-login.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   overflow: hidden;
 }
 
-:root[data-theme='light'] .login-layout {
-  background-image: url('/bg-login.png');
+.login-layout::before {
+  content: '';
+  position: absolute;
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  background-image: linear-gradient(rgba(240, 253, 249, 0.4), rgba(240, 253, 249, 0.4)), url('/bg-login.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  animation: slowPan 30s ease-in-out infinite alternate;
+}
+
+@keyframes slowPan {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.05) translate(-1%, -1%); }
+}
+
+:root[data-theme='light'] .login-layout::before {
+  background-image: linear-gradient(rgba(240, 253, 249, 0.4), rgba(240, 253, 249, 0.4)), url('/bg-login.png');
+}
+
+:root[data-theme='dark'] .login-layout::before {
+  background-image: linear-gradient(rgba(10, 12, 16, 0.7), rgba(10, 12, 16, 0.7)), url('/bg-login.png');
 }
 
 .bg-grid-overlay {
@@ -177,10 +197,10 @@ body {
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 24px;
   padding: 3rem;
   width: 100%;
