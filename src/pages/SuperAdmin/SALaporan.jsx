@@ -88,14 +88,17 @@ export default function SALaporan() {
       const ws_data = [
         ['Laporan Absensi - ' + MONTHS_ID[filterMonth] + ' ' + filterYear],
         [],
-        ['No', 'Nama Karyawan', 'NIK', 'Cabang', 'Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpa', 'Total Jam Kerja'],
+        ['No', 'Nama Karyawan', 'NIK', 'Jabatan', 'Cabang', 'Hadir', 'Telat Kerja', 'Telat Istirahat', 'Cepat Pulang', 'Izin', 'Sakit', 'Alfa', 'Total Jam Kerja'],
         ...reportFiltered.map((row, i) => [
           i + 1,
           row.full_name || '-',
           row.nik || '-',
+          row.position || '-',
           row.branch || '-',
           row.hadir || 0,
-          row.terlambat || 0,
+          row.terlambat_kerja || 0,
+          row.terlambat_istirahat || 0,
+          row.cepat_pulang || 0,
           row.izin || 0,
           row.sakit || 0,
           row.alpa || 0,
@@ -117,12 +120,14 @@ export default function SALaporan() {
 
   const totals = reportFiltered.reduce((acc, row) => ({
     hadir: acc.hadir + (row.hadir || 0),
-    terlambat: acc.terlambat + (row.terlambat || 0),
+    terlambat_kerja: acc.terlambat_kerja + (row.terlambat_kerja || 0),
+    terlambat_istirahat: acc.terlambat_istirahat + (row.terlambat_istirahat || 0),
+    cepat_pulang: acc.cepat_pulang + (row.cepat_pulang || 0),
     izin: acc.izin + (row.izin || 0),
     sakit: acc.sakit + (row.sakit || 0),
     alpa: acc.alpa + (row.alpa || 0),
     total_work_minutes: acc.total_work_minutes + (row.total_work_minutes || 0),
-  }), { hadir: 0, terlambat: 0, izin: 0, sakit: 0, alpa: 0, total_work_minutes: 0 });
+  }), { hadir: 0, terlambat_kerja: 0, terlambat_istirahat: 0, cepat_pulang: 0, izin: 0, sakit: 0, alpa: 0, total_work_minutes: 0 });
 
   return (
     <>
@@ -195,22 +200,22 @@ export default function SALaporan() {
       {activeTab === 'report' ? (
         <>
           {/* Summary Cards */}
-          <div className="stat-grid" style={{ marginBottom: '1.5rem' }}>
+          <div className="stat-grid responsive-grid-4" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
             <div className="stat-card">
               <div className="stat-info"><h3>Total Hadir</h3><div className="value">{totals.hadir}</div></div>
               <div className="stat-icon" style={{ color: 'var(--secondary)', background: 'rgba(16,185,129,0.1)' }}><Users size={24} /></div>
             </div>
             <div className="stat-card">
-              <div className="stat-info"><h3>Terlambat</h3><div className="value">{totals.terlambat}</div></div>
+              <div className="stat-info"><h3>Telat Kerja</h3><div className="value">{totals.terlambat_kerja}</div></div>
               <div className="stat-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><FileText size={24} /></div>
             </div>
             <div className="stat-card">
-              <div className="stat-info"><h3>Izin/Sakit</h3><div className="value">{totals.izin + totals.sakit}</div></div>
-              <div className="stat-icon" style={{ color: '#3b82f6', background: 'rgba(59,130,246,0.1)' }}><FileText size={24} /></div>
+              <div className="stat-info"><h3>Cepat Pulang</h3><div className="value">{totals.cepat_pulang}</div></div>
+              <div className="stat-icon" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }}><XCircle size={24} /></div>
             </div>
             <div className="stat-card">
-              <div className="stat-info"><h3>Alpa</h3><div className="value">{totals.alpa}</div></div>
-              <div className="stat-icon" style={{ color: 'var(--error)', background: 'rgba(239,68,68,0.1)' }}><FileText size={24} /></div>
+              <div className="stat-info"><h3>Alfa</h3><div className="value">{totals.alpa}</div></div>
+              <div className="stat-icon" style={{ color: '#6b7280', background: 'rgba(107,114,128,0.1)' }}><Calendar size={24} /></div>
             </div>
           </div>
 
@@ -251,18 +256,21 @@ export default function SALaporan() {
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       <th style={{ padding: '0.75rem 1rem' }}>Nama / NIK</th>
+                      <th>Jabatan</th>
                       <th>Cabang</th>
                       <th style={{ textAlign: 'center' }}>Hadir</th>
-                      <th style={{ textAlign: 'center' }}>Terlambat</th>
+                      <th style={{ textAlign: 'center' }}>Telat Kerja</th>
+                      <th style={{ textAlign: 'center' }}>Telat Istirahat</th>
+                      <th style={{ textAlign: 'center' }}>Cepat Pulang</th>
                       <th style={{ textAlign: 'center' }}>Izin</th>
                       <th style={{ textAlign: 'center' }}>Sakit</th>
-                      <th style={{ textAlign: 'center' }}>Alpa</th>
+                      <th style={{ textAlign: 'center' }}>Alfa</th>
                       <th style={{ textAlign: 'center' }}>Jam Kerja</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reportFiltered.length === 0 ? (
-                      <tr><td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Tidak ada data absensi untuk periode ini</td></tr>
+                      <tr><td colSpan={11} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Tidak ada data absensi untuk periode ini</td></tr>
                     ) : (
                       reportFiltered.map((row, i) => (
                         <tr key={row.employee_id || i} style={{ borderBottom: '1px solid var(--surface-border)', fontSize: '0.875rem' }}>
@@ -270,19 +278,26 @@ export default function SALaporan() {
                             <div style={{ fontWeight: '700' }}>{row.full_name}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.nik || '-'}</div>
                           </td>
+                          <td style={{ color: 'var(--text-secondary)' }}>{row.position || '-'}</td>
                           <td style={{ color: 'var(--text-secondary)' }}>{row.branch || '-'}</td>
                           <td style={{ textAlign: 'center' }}>
                             <span style={{ fontWeight: '700', color: 'var(--secondary)' }}>{row.hadir || 0}</span>
                           </td>
                           <td style={{ textAlign: 'center' }}>
-                            <span style={{ fontWeight: '700', color: row.terlambat > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{row.terlambat || 0}</span>
+                            <span style={{ fontWeight: '700', color: row.terlambat_kerja > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{row.terlambat_kerja || 0}</span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{ fontWeight: '700', color: row.terlambat_istirahat > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{row.terlambat_istirahat || 0}</span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span style={{ fontWeight: '700', color: row.cepat_pulang > 0 ? 'var(--error)' : 'var(--text-muted)' }}>{row.cepat_pulang || 0}</span>
                           </td>
                           <td style={{ textAlign: 'center' }}>{row.izin || 0}</td>
                           <td style={{ textAlign: 'center' }}>{row.sakit || 0}</td>
                           <td style={{ textAlign: 'center' }}>
                             <span style={{ fontWeight: '700', color: row.alpa > 0 ? 'var(--error)' : 'var(--text-muted)' }}>{row.alpa || 0}</span>
                           </td>
-                          <td style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          <td style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)', minWidth: '100px' }}>
                             {Math.floor((row.total_work_minutes || 0) / 60)}j {(row.total_work_minutes || 0) % 60}m
                           </td>
                         </tr>

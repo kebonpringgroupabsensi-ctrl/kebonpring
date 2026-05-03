@@ -81,13 +81,15 @@ export default function ACLaporan() {
       const ws_data = [
         ['Laporan Absensi Cabang - ' + MONTHS_ID[filterMonth] + ' ' + filterYear],
         [],
-        ['No', 'Nama Karyawan', 'NIK', 'Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpa', 'Total Jam Kerja'],
+        ['No', 'Nama Karyawan', 'NIK', 'Hadir', 'Telat Kerja', 'Telat Istirahat', 'Cepat Pulang', 'Izin', 'Sakit', 'Alfa', 'Total Jam Kerja'],
         ...reportFiltered.map((row, i) => [
           i + 1,
           row.full_name || '-',
           row.nik || '-',
           row.hadir || 0,
-          row.terlambat || 0,
+          row.terlambat_kerja || 0,
+          row.terlambat_istirahat || 0,
+          row.cepat_pulang || 0,
           row.izin || 0,
           row.sakit || 0,
           row.alpa || 0,
@@ -207,9 +209,12 @@ export default function ACLaporan() {
                   <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'left' }}>
                     <th style={{ padding: '0.75rem 1rem' }}>Nama Karyawan</th>
                     <th style={{ textAlign: 'center' }}>Hadir</th>
+                    <th style={{ textAlign: 'center' }}>Telat Kerja</th>
+                    <th style={{ textAlign: 'center' }}>Telat Istirahat</th>
+                    <th style={{ textAlign: 'center' }}>Cepat Pulang</th>
                     <th style={{ textAlign: 'center' }}>Izin</th>
                     <th style={{ textAlign: 'center' }}>Sakit</th>
-                    <th style={{ textAlign: 'center' }}>Alpa</th>
+                    <th style={{ textAlign: 'center' }}>Alfa</th>
                     <th style={{ textAlign: 'center' }}>Jam Kerja</th>
                   </tr>
                 </thead>
@@ -221,6 +226,9 @@ export default function ACLaporan() {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.nik || '-'}</div>
                       </td>
                       <td style={{ textAlign: 'center' }}>{row.hadir || 0}</td>
+                      <td style={{ textAlign: 'center' }}>{row.terlambat_kerja || 0}</td>
+                      <td style={{ textAlign: 'center' }}>{row.terlambat_istirahat || 0}</td>
+                      <td style={{ textAlign: 'center' }}>{row.cepat_pulang || 0}</td>
                       <td style={{ textAlign: 'center' }}>{row.izin || 0}</td>
                       <td style={{ textAlign: 'center' }}>{row.sakit || 0}</td>
                       <td style={{ textAlign: 'center' }}>{row.alpa || 0}</td>

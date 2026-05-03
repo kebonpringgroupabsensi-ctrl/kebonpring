@@ -257,11 +257,32 @@ router.post('/break/end', async (req, res) => {
     const breakStart = new Date(attendance.start_break_time);
     const breakMinutes = Math.round((now - breakStart) / 60000);
 
+    // Get shift info for lateness check
+    const { data: assignment } = await supabaseAdmin
+      .from('shift_assignments')
+      .select('shifts(*)')
+      .eq('employee_id', req.user.profile.id)
+      .eq('date', today)
+      .maybeSingle();
+
+    let isLateBreak = false;
+    let lateBreakMinutes = 0;
+    if (assignment?.shifts?.break_end) {
+      const [h, m] = assignment.shifts.break_end.split(':').map(Number);
+      const breakEnd = new Date(now);
+      breakEnd.setHours(h, m, 0, 0);
+      if (now > breakEnd) {
+        isLateBreak = true;
+        lateBreakMinutes = Math.round((now - breakEnd) / 60000);
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('attendances')
       .update({
         end_break_time: now.toISOString(),
         total_break_minutes: breakMinutes,
+        notes: isLateBreak ? `Terlambat habis istirahat ${lateBreakMinutes} menit` : attendance.notes
       })
       .eq('id', attendance.id)
       .select()
@@ -269,7 +290,9 @@ router.post('/break/end', async (req, res) => {
 
     if (error) throw error;
     return res.json({
-      message: `Istirahat selesai (${breakMinutes} menit). Semangat bekerja kembali!`,
+      message: isLateBreak 
+        ? `Istirahat selesai. Anda terlambat ${lateBreakMinutes} menit kembali bekerja.`
+        : `Istirahat selesai (${breakMinutes} menit). Semangat bekerja kembali!`,
       attendance: data,
     });
   } catch (err) {
@@ -302,6 +325,26 @@ router.post('/check-out', async (req, res) => {
     const checkIn = new Date(attendance.check_in_time);
     const totalWorkMinutes = Math.round((now - checkIn) / 60000) - (attendance.total_break_minutes || 0);
 
+    // Get shift info for early leave check
+    const { data: assignment } = await supabaseAdmin
+      .from('shift_assignments')
+      .select('shifts(*)')
+      .eq('employee_id', req.user.profile.id)
+      .eq('date', today)
+      .maybeSingle();
+
+    let isEarlyLeave = false;
+    let earlyLeaveMinutes = 0;
+    if (assignment?.shifts?.end_time) {
+      const [h, m] = assignment.shifts.end_time.split(':').map(Number);
+      const shiftEnd = new Date(now);
+      shiftEnd.setHours(h, m, 0, 0);
+      if (now < shiftEnd) {
+        isEarlyLeave = true;
+        earlyLeaveMinutes = Math.round((shiftEnd - now) / 60000);
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('attendances')
       .update({
@@ -310,6 +353,7 @@ router.post('/check-out', async (req, res) => {
         check_out_longitude: longitude,
         check_out_face_verified: face_verified || false,
         total_work_minutes: totalWorkMinutes,
+        notes: isEarlyLeave ? `Pulang lebih awal ${earlyLeaveMinutes} menit` : attendance.notes
       })
       .eq('id', attendance.id)
       .select()
@@ -321,7 +365,9 @@ router.post('/check-out', async (req, res) => {
     const mins = totalWorkMinutes % 60;
 
     return res.json({
-      message: `Check-out berhasil! Total kerja: ${hours} jam ${mins} menit.`,
+      message: isEarlyLeave
+        ? `Check-out berhasil! Anda pulang lebih awal ${earlyLeaveMinutes} menit. Total kerja: ${hours} jam ${mins} menit.`
+        : `Check-out berhasil! Total kerja: ${hours} jam ${mins} menit.`,
       attendance: data,
     });
   } catch (err) {
@@ -352,7 +398,7 @@ router.get('/summary', async (req, res) => {
 
     let query = supabaseAdmin
       .from('attendances')
-      .select('employee_id, status, is_late, total_work_minutes, profiles!attendances_employee_id_fkey(full_name, nik, branch_id, branches(name))')
+      .select('*, profiles!attendances_employee_id_fkey(full_name, nik, position, branch_id, branches(name)), shifts(*)')
       .gte('date', startDate)
       .lt('date', endDate);
 
@@ -375,17 +421,50 @@ router.get('/summary', async (req, res) => {
           employee_id: empId,
           full_name: att.profiles?.full_name,
           nik: att.profiles?.nik,
+          position: att.profiles?.position,
           branch: att.profiles?.branches?.name,
           hadir: 0,
-          terlambat: 0,
+          terlambat_kerja: 0,
+          terlambat_istirahat: 0,
+          cepat_pulang: 0,
           izin: 0,
           sakit: 0,
           alpa: 0,
           total_work_minutes: 0,
         };
       }
-      summary[empId][att.status] = (summary[empId][att.status] || 0) + 1;
-      if (att.is_late) summary[empId].terlambat++;
+
+      // Base status counts
+      if (att.status === 'hadir') summary[empId].hadir++;
+      else if (att.status === 'terlambat') summary[empId].terlambat_kerja++;
+      else if (att.status === 'izin') summary[empId].izin++;
+      else if (att.status === 'sakit') summary[empId].sakit++;
+      else if (att.status === 'alpa') summary[empId].alpa++;
+
+      // Check for specific lateness even if marked as 'hadir' or 'terlambat'
+      const shift = att.shifts;
+      if (shift && att.status !== 'izin' && att.status !== 'sakit' && att.status !== 'alpa') {
+        // Late after break
+        if (att.end_break_time && shift.break_end) {
+          const [h, m] = shift.break_end.split(':').map(Number);
+          const breakEnd = new Date(att.end_break_time);
+          breakEnd.setHours(h, m, 0, 0);
+          if (new Date(att.end_break_time) > breakEnd) {
+            summary[empId].terlambat_istirahat++;
+          }
+        }
+        
+        // Early Leave
+        if (att.check_out_time && shift.end_time) {
+          const [h, m] = shift.end_time.split(':').map(Number);
+          const endTime = new Date(att.check_out_time);
+          endTime.setHours(h, m, 0, 0);
+          if (new Date(att.check_out_time) < endTime) {
+            summary[empId].cepat_pulang++;
+          }
+        }
+      }
+
       summary[empId].total_work_minutes += att.total_work_minutes || 0;
     });
 
