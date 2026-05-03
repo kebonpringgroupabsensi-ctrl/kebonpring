@@ -136,14 +136,7 @@ export default function Login() {
   return (
     <div className="login-layout">
       <div className="auth-container">
-        <div className="glass-card">
-          <div className="brand-header">
-            <img src="/logo.png" alt="Warung Request Logo" className="brand-logo" />
-            <h1 className="brand-title">Welcome Back</h1>
-            <p className="brand-subtitle">Portal Aplikasi Karyawan Warung Request</p>
-          </div>
-
-          <div className="role-selector">
+        <div className="role-tabs-custom">
             {ROLES.map(role => (
               <button
                 key={role.id}
@@ -163,33 +156,28 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">Email Address</label>
-              <div className="input-wrapper">
-                <Mail className="input-icon" size={20} />
+            <div className="custom-input-wrapper">
+              <User className="icon" size={20} />
                 <input
                   type="email"
                   id="email"
                   name="email"
-                  className="form-input form-input-icon"
-                  placeholder="Enter your email"
+                className=""
+                placeholder="Username / Email"
                   value={loginData.email}
                   onChange={handleLoginChange}
                   required
                 />
-              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <div className="input-wrapper">
-                <Lock className="input-icon" size={20} />
+            <div className="custom-input-wrapper">
+              <Lock className="icon" size={20} />
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
-                  className="form-input form-input-icon form-input-password"
-                  placeholder="Enter your password"
+                className=""
+                placeholder="Password"
                   value={loginData.password}
                   onChange={handleLoginChange}
                   required
@@ -197,40 +185,41 @@ export default function Login() {
                 <button
                   type="button"
                   className="password-toggle"
+                  style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: '0.2rem' }}
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
-              </div>
-              <a href="#" className="forgot-password">Forgot Password?</a>
             </div>
-
-            <button type="submit" className="btn-submit" disabled={isLoading}>
+            <button type="submit" className="custom-btn-submit" disabled={isLoading}>
               {isLoading ? (
-                <div className="loader"></div>
+                <div className="loader" style={{borderColor: 'white', width: '20px', height: '20px'}}></div>
               ) : (
-                <>
-                  <LogIn size={20} />
-                  <span>Sign In as {activeRole.label}</span>
-                </>
+                'LOGIN'
               )}
             </button>
           </form>
 
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-            Anda karyawan dan belum punya akun?{' '}
+          <div className="custom-links">
+            <a href="#">Lupa Password?</a>
+          </div>
+
+          <div className="custom-divider">
+            atau
+          </div>
+
+          <div className="custom-links">
+            Belum punya akun?{' '}
             <button 
               onClick={() => {
                 setError('');
                 setShowRegisterModal(true);
               }}
-              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
             >
-              Daftar disini
+              Daftar di sini
             </button>
           </div>
-        </div>
       </div>
 
       {/* Registration Modal */}

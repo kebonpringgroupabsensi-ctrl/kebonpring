@@ -71,39 +71,28 @@ body {
   min-height: 100vh;
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Align left */
   align-items: center;
-  position: relative;
-  background-color: var(--bg-color); /* Fallback */
-  overflow: hidden;
-}
-
-.login-layout::before {
-  content: '';
-  position: absolute;
-  top: -5%;
-  left: -5%;
-  width: 110%;
-  height: 110%;
-  background-image: linear-gradient(rgba(240, 253, 249, 0.4), rgba(240, 253, 249, 0.4)), url('/bg-login.png');
+  padding-left: 15vw; /* Position under logo */
+  background-image: url('/bg-login.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: 0;
-  animation: slowPan 30s ease-in-out infinite alternate;
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes slowPan {
-  0% { transform: scale(1) translate(0, 0); }
-  100% { transform: scale(1.05) translate(-1%, -1%); }
+@media (max-width: 768px) {
+  .login-layout {
+    padding: 2rem;
+    justify-content: center;
+    background-position: 30% center;
+  }
 }
 
-:root[data-theme='light'] .login-layout::before {
-  background-image: linear-gradient(rgba(240, 253, 249, 0.4), rgba(240, 253, 249, 0.4)), url('/bg-login.png');
-}
-
-:root[data-theme='dark'] .login-layout::before {
-  background-image: linear-gradient(rgba(10, 12, 16, 0.7), rgba(10, 12, 16, 0.7)), url('/bg-login.png');
+:root[data-theme='light'] .login-layout,
+:root[data-theme='dark'] .login-layout {
+  background-image: url('/bg-login.png');
 }
 
 .bg-grid-overlay {
@@ -186,91 +175,128 @@ body {
 }
 
 .auth-container {
-  height: 100vh;
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  position: relative;
-  z-index: 10;
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 24px;
-  padding: 3rem;
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  opacity: 0;
-  transform: translateY(30px);
-  margin: auto;
-  position: relative;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  margin-top: 15vh; /* Push down to sit under logo */
 }
 
-:root[data-theme='dark'] .glass-card {
-  background: rgba(22, 27, 34, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-/* Glowing border effect for glass card */
-.glass-card::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 26px;
-  background: linear-gradient(45deg, transparent 30%, rgba(16, 185, 129, 0.6), rgba(59, 130, 246, 0.6), transparent 70%);
-  background-size: 300% 300%;
-  z-index: -1;
-  animation: borderGlow 6s linear infinite;
-  opacity: 0.8;
-}
-
-@keyframes borderGlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-
-@keyframes slideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (max-width: 768px) {
+  .auth-container {
+    margin-top: 30vh;
   }
 }
 
-.brand-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
-.brand-logo {
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
+.custom-input-wrapper {
+  background: rgba(230, 226, 216, 0.9);
+  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 1rem;
-  animation: floatLogo 4s ease-in-out infinite;
-  filter: drop-shadow(0 10px 15px rgba(16, 185, 129, 0.2));
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-@keyframes floatLogo {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-8px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+.custom-input-wrapper input {
+  background: transparent;
+  border: none;
+  width: 100%;
+  padding: 0.6rem 0;
+  outline: none;
+  font-size: 1.05rem;
+  color: #333;
+}
+.custom-input-wrapper input::placeholder {
+  color: #888;
+}
+.custom-input-wrapper .icon {
+  color: #666;
 }
 
-.brand-title {
-  font-size: 1.75rem;
+.custom-btn-submit {
+  background-color: #3d5c34;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  width: 100%;
+  padding: 1.1rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary-dark);
-  margin-bottom: 0.5rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.custom-btn-submit:hover {
+  background-color: #2b4224;
+}
+
+.custom-links {
+  text-align: center;
+  color: white;
+  font-size: 0.95rem;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+  margin-top: 1rem;
+}
+
+.custom-links a, .custom-links button {
+  color: #a3d977;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.custom-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: white;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+.custom-divider::before, .custom-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+}
+.custom-divider::before { margin-right: .5em; }
+.custom-divider::after { margin-left: .5em; }
+
+.role-tabs-custom {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.role-tabs-custom button {
+  flex: 1;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.role-tabs-custom button.active {
+  background: #3d5c34;
+  border-color: #3d5c34;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
 }
 
 :root[data-theme='dark'] .brand-title {
