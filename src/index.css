@@ -58,8 +58,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -77,8 +76,7 @@ body {
   position: relative;
   background-color: var(--bg-color); /* Fallback */
   background: radial-gradient(circle at center, var(--bg-color) 0%, #032115 100%);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 :root[data-theme='light'] .login-layout {
@@ -165,7 +163,8 @@ body {
 }
 
 .auth-container {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -187,7 +186,7 @@ body {
   animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
   transform: translateY(30px);
-  transition: all 0.3s ease;
+  margin: auto;
   position: relative;
 }
 
