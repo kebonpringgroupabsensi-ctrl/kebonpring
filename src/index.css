@@ -71,9 +71,9 @@ body {
   min-height: 100vh;
   width: 100%;
   display: flex;
-  justify-content: flex-start; /* Align left */
+  justify-content: flex-start;
   align-items: center;
-  padding-left: 15vw; /* Position under logo */
+  padding-left: 17vw; /* Align horizontally under the logo */
   background-image: url('/bg-login.png');
   background-size: cover;
   background-position: center;
@@ -180,7 +180,7 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 10;
-  margin-top: 15vh; /* Push down to sit under logo */
+  margin-top: 15vh; /* Push down to sit exactly under the logo */
 }
 
 @media (max-width: 768px) {
