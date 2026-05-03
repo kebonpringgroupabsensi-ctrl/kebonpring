@@ -18,6 +18,7 @@ export async function authenticateRequest(req) {
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
   if (error || !user) {
+    console.error('Vercel Auth Error:', error?.message || 'User not found');
     const err = new Error('Token tidak valid atau sudah kedaluwarsa.');
     err.statusCode = 401;
     throw err;
@@ -31,6 +32,7 @@ export async function authenticateRequest(req) {
     .single();
 
   if (profileError) {
+    console.error(`Vercel Profile Fetch Error for user ${user.id}:`, profileError.message);
     const err = new Error('Profil pengguna tidak ditemukan.');
     err.statusCode = 401;
     throw err;
