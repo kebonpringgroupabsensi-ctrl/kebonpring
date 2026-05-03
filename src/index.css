@@ -58,7 +58,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -76,7 +77,8 @@ body {
   position: relative;
   background-color: var(--bg-color); /* Fallback */
   background: radial-gradient(circle at center, var(--bg-color) 0%, #032115 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 :root[data-theme='light'] .login-layout {
@@ -451,4 +453,38 @@ select.form-input {
   font-size: 0.85rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .auth-container {
+    padding: 1rem;
+    align-items: flex-start; /* Better for scrolling content on mobile */
+  }
+
+  .glass-card {
+    padding: 2rem 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .brand-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .auth-container {
+    align-items: flex-start;
+  }
+  
+  .glass-card {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
 }
