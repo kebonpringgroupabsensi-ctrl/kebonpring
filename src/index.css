@@ -297,7 +297,6 @@ body {
   border-color: #3d5c34;
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
-}
 
 :root[data-theme='dark'] .brand-title {
   color: var(--primary-light);
