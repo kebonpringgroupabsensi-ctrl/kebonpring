@@ -248,7 +248,6 @@ body {
 .custom-input-wrapper .icon {
   color: #3d5c34;
 }
-}
 
 .custom-btn-submit {
   width: 100%;
@@ -309,7 +308,6 @@ body {
   color: #7f8c8d;
   margin: 1.5rem 0;
   font-size: 0.85rem;
-}
 }
 .custom-divider::before, .custom-divider::after {
   content: '';
