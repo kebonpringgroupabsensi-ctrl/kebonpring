@@ -181,7 +181,7 @@ body {
   flex-direction: column;
   z-index: 10;
   margin-top: 40vh; /* Increased from 25vh to match the logo position with top center background */
-  transform: translateX(-70px); /* Final nudge to the left */
+  transform: translateX(-40px); /* Adjusted from -70px to shift slightly to the right */
 }
 
 @media (max-width: 768px) {
@@ -212,6 +212,7 @@ body {
   outline: none;
   font-size: 1.05rem;
   color: #333;
+  font-family: inherit; /* Ensure font matches the rest of the app */
 }
 .custom-input-wrapper input::placeholder {
   color: #888;
@@ -245,14 +246,13 @@ body {
 
 .custom-links {
   text-align: center;
-  color: white;
+  color: #444; /* Darker color for readability on light background */
   font-size: 0.95rem;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
   margin-top: 1rem;
 }
 
 .custom-links a, .custom-links button {
-  color: #a3d977;
+  color: #3d5c34; /* Theme green color */
   text-decoration: none;
   background: none;
   border: none;
@@ -264,15 +264,14 @@ body {
   display: flex;
   align-items: center;
   text-align: center;
-  color: white;
+  color: #666; /* Darker color for readability */
   margin: 1.5rem 0;
   font-size: 0.9rem;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
 }
 .custom-divider::before, .custom-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(0,0,0,0.15); /* Darker line for light background */
 }
 .custom-divider::before { margin-right: .5em; }
 .custom-divider::after { margin-left: .5em; }
@@ -284,14 +283,13 @@ body {
 }
 .role-tabs-custom button {
   flex: 1;
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: white;
+  background: rgba(0,0,0,0.05); /* Subtle dark background for inactive tabs */
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #666; /* Darker text for readability */
   padding: 0.6rem;
   border-radius: 8px;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.2s;
@@ -299,7 +297,8 @@ body {
 .role-tabs-custom button.active {
   background: #3d5c34;
   border-color: #3d5c34;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  color: white; /* Active tab stays white text */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 :root[data-theme='dark'] .brand-title {
