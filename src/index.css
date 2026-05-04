@@ -4,28 +4,28 @@
 
 
 :root {
-  /* LIGHT MODE (Default) */
-  --primary: #10B981;
-  --primary-hover: #34D399;
-  --primary-dark: #059669;
-  --secondary: #047857;
+  /* LIGHT MODE (Default) - Harmonized Forest Green Theme */
+  --primary: #3d5c34;
+  --primary-hover: #4a6d3f;
+  --primary-dark: #2b4224;
+  --secondary: #557a4a;
   
-  --bg-color: #F0FDF9;
+  --bg-color: #F8FAF7;
   --surface: #FFFFFF;
-  --surface-hover: #D1FAE5;
-  --surface-border: #D1FAE5;
+  --surface-hover: #F0F4EF;
+  --surface-border: #E8EDE7;
   
-  --text-main: #1F2937;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --text-main: #2c3e50;
+  --text-secondary: #5a6c5a;
+  --text-muted: #94a394;
   
   --error: #EF4444;
-  --success: #10B981;
+  --success: #3d5c34;
   --warning: #F59E0B;
   
-  --shadow-sm: 0 1px 2px 0 rgb(16 185 129 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(16 185 129 / 0.1), 0 2px 4px -2px rgb(16 185 129 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(16 185 129 / 0.1), 0 4px 6px -4px rgb(16 185 129 / 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(61, 92, 52, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(61, 92, 52, 0.1), 0 2px 4px -2px rgba(61, 92, 52, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(61, 92, 52, 0.1), 0 4px 6px -4px rgba(61, 92, 52, 0.1);
 }
 
 :root[data-theme='dark'] {
