@@ -136,6 +136,9 @@ export default function Login() {
   return (
     <div className="login-layout">
       <div className="auth-container">
+        <div className="login-logo-wrapper">
+          <img src="/logo-login.png" alt="Kebon Pring Logo" className="login-logo" />
+        </div>
         <div className="role-tabs-custom">
             {ROLES.map(role => (
               <button
