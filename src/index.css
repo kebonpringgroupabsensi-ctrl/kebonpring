@@ -180,6 +180,7 @@ body {
   flex-direction: column;
   z-index: 10;
   margin-top: 40vh; /* Increased from 25vh to match the logo position with top center background */
+  transform: translateX(-25px); /* Nudge to the left to align with the logo in the background */
 }
 
 @media (max-width: 768px) {
