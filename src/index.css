@@ -83,9 +83,10 @@ body {
 
 @media (max-width: 768px) {
   .login-layout {
-    padding: 2rem;
+    padding: 1.5rem;
     justify-content: center;
-    background-position: 30% center;
+    align-items: flex-start; /* Align to top to prevent logo overlap */
+    background-position: top center; /* Ensure logo at top is visible */
   }
 }
 
@@ -185,7 +186,9 @@ body {
 
 @media (max-width: 768px) {
   .auth-container {
-    margin-top: 30vh;
+    margin-top: 25vh; /* Adjusted to sit below logo on mobile */
+    transform: translateX(0); /* Remove the left shift on mobile */
+    max-width: 100%;
   }
 }
 
