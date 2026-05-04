@@ -116,7 +116,7 @@ export default function SAAdmin() {
           <div className="stat-icon" style={{ color: 'var(--secondary)', background: 'rgba(16,185,129,0.1)' }}><ShieldCheck size={24} /></div>
         </div>
         <div className="stat-card">
-          <div className="stat-info"><h3>Super Admin</h3><div className="value">{admins.filter(a => a.role === 'super_admin').length}</div></div>
+          <div className="stat-info"><h3>Owner</h3><div className="value">{admins.filter(a => a.role === 'super_admin').length}</div></div>
           <div className="stat-icon" style={{ color: '#3b82f6', background: 'rgba(59,130,246,0.1)' }}><ShieldCheck size={24} /></div>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function SAAdmin() {
                           padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '700',
                           background: admin.role === 'super_admin' ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)',
                           color: admin.role === 'super_admin' ? '#3b82f6' : 'var(--secondary)',
-                        }}>{admin.role === 'super_admin' ? 'Super Admin' : 'Admin Cabang'}</span>
+                        }}>{admin.role === 'super_admin' ? 'Owner' : 'Admin Cabang'}</span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => openEdit(admin)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', marginRight: '0.5rem' }}><Edit size={14} /></button>
@@ -212,7 +212,7 @@ export default function SAAdmin() {
                   <label className="form-label">Role *</label>
                   <select className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                     <option value="admin_cabang">Admin Cabang</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="super_admin">Owner</option>
                   </select>
                 </div>
                 {form.role === 'admin_cabang' && (

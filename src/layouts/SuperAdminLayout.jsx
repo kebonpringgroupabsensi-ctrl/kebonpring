@@ -40,7 +40,7 @@ export default function SuperAdminLayout() {
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <img src="/logo.png" alt="Logo" className="sidebar-logo" />
-          <div className="sidebar-title">Super Admin</div>
+          <div className="sidebar-title">Owner</div>
         </div>
         
         <nav className="nav-menu">
@@ -80,7 +80,7 @@ export default function SuperAdminLayout() {
             <Menu size={24} />
           </button>
           <div className="page-title">
-            {MENU_ITEMS.find(i => i.path === location.pathname)?.label || 'Super Admin'}
+            {MENU_ITEMS.find(i => i.path === location.pathname)?.label || 'Owner'}
           </div>
           <div className="topbar-actions">
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle Theme">
@@ -88,7 +88,7 @@ export default function SuperAdminLayout() {
             </button>
             <button className="profile-btn">
               <User size={18} />
-              <span>{user?.full_name || 'Super Admin'}</span>
+              <span>{user?.full_name || 'Owner'}</span>
             </button>
           </div>
         </header>

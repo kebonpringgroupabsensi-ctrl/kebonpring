@@ -402,36 +402,41 @@ function FaceScanModal({ action, onVerified, onSkip, onClose }) {
   };
 
   const handleCapture = async () => {
-    if (!videoRef.current || !storedDescriptor) return;
+    if (!videoRef.current || !storedDescriptor || scanning) return;
     
     setScanning(true);
-    setStatus('Memverifikasi wajah...');
+    setStatus('Menyiapkan pemindaian...');
     
-    try {
-      const currentDescriptor = await extractFaceDescriptor(videoRef.current);
-      
-      if (!currentDescriptor) {
-        setStatus('Wajah tidak terdeteksi. Coba posisi lain.');
-        setScanning(false);
-        return;
-      }
+    // Give UI time to render the loader before heavy computation
+    setTimeout(async () => {
+      try {
+        setStatus('Sedang memverifikasi wajah...');
+        const currentDescriptor = await extractFaceDescriptor(videoRef.current);
+        
+        if (!currentDescriptor) {
+          setStatus('Wajah tidak terdeteksi. Pastikan wajah terlihat jelas dan coba lagi.');
+          setScanning(false);
+          return;
+        }
 
-      const matched = isMatch(storedDescriptor, currentDescriptor);
+        const matched = isMatch(storedDescriptor, currentDescriptor);
 
-      if (matched) {
-        setStatus('Verifikasi Berhasil!');
-        setTimeout(() => {
-          stopCamera();
-          onVerified();
-        }, 1000);
-      } else {
-        setStatus('Wajah tidak cocok. Silakan coba lagi.');
+        if (matched) {
+          setStatus('Verifikasi Berhasil! Memproses absensi...');
+          setTimeout(() => {
+            stopCamera();
+            onVerified();
+          }, 1000);
+        } else {
+          setStatus('Wajah tidak cocok. Silakan coba posisi lain atau bersihkan kamera.');
+          setScanning(false);
+        }
+      } catch (err) {
+        console.error('Face verification error:', err);
+        setStatus('Kesalahan sistem: ' + err.message);
         setScanning(false);
       }
-    } catch (err) {
-      setStatus('Kesalahan: ' + err.message);
-      setScanning(false);
-    }
+    }, 500);
   };
 
   return (

@@ -6,7 +6,7 @@ import SuperAdminLayout from './layouts/SuperAdminLayout';
 import AdminCabangLayout from './layouts/AdminCabangLayout';
 import KaryawanLayout from './layouts/KaryawanLayout';
 
-// Super Admin Pages
+// Owner Pages
 import SADashboard from './pages/SuperAdmin/SADashboard';
 import SACabang from './pages/SuperAdmin/SACabang';
 import SAKaryawan from './pages/SuperAdmin/SAKaryawan';
@@ -34,7 +34,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Super Admin Routes */}
+        {/* Owner Routes */}
         <Route path="/superadmin" element={<SuperAdminLayout />}>
           <Route index element={<SADashboard />} />
           <Route path="cabang" element={<SACabang />} />

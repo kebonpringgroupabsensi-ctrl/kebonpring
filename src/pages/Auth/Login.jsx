@@ -7,7 +7,7 @@ import { branchService } from '../../services/branchService';
 const ROLES = [
   { id: 'karyawan', label: 'Karyawan', path: '/karyawan' },
   { id: 'admin', label: 'Admin Cabang', path: '/admin' },
-  { id: 'superadmin', label: 'Super Admin', path: '/superadmin' }
+  { id: 'superadmin', label: 'Owner', path: '/superadmin' }
 ];
 
 export default function Login() {

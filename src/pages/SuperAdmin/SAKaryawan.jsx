@@ -119,7 +119,7 @@ export default function SAKaryawan() {
   });
 
   const getRoleLabel = (role) => {
-    if (role === 'super_admin') return 'Super Admin';
+    if (role === 'super_admin') return 'Owner';
     if (role === 'admin_cabang') return 'Admin Cabang';
     return 'Karyawan';
   };
@@ -294,7 +294,7 @@ export default function SAKaryawan() {
                       <select className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                         <option value="karyawan">Karyawan</option>
                         <option value="admin_cabang">Admin Cabang</option>
-                        <option value="super_admin">Super Admin</option>
+                        <option value="super_admin">Owner</option>
                       </select>
                     </div>
                   </>
