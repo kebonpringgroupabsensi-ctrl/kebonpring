@@ -75,7 +75,7 @@ body {
   align-items: center;
   background-image: url('/bg-login.png');
   background-size: cover;
-  background-position: center;
+  background-position: top center; /* Changed from center to top center to show space above logo */
   background-repeat: no-repeat;
   position: relative;
   overflow: hidden;
@@ -179,7 +179,7 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 10;
-  margin-top: 25vh; /* Push down to sit exactly under the centered logo */
+  margin-top: 40vh; /* Increased from 25vh to match the logo position with top center background */
 }
 
 @media (max-width: 768px) {
