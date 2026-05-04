@@ -135,6 +135,15 @@ export default function Login() {
 
   return (
     <div className="login-layout">
+      {/* Background Glowing Effects */}
+      <div className="lamp-glow-container">
+        <div className="lamp-glow glow-1"></div>
+        <div className="lamp-glow glow-2"></div>
+        <div className="lamp-glow glow-3"></div>
+        <div className="lamp-glow glow-4"></div>
+        <div className="lamp-glow glow-5"></div>
+      </div>
+
       <div className="auth-container">
         <div className="login-logo-wrapper">
           <img src="/logo-login.png" alt="Kebon Pring Logo" className="login-logo" />
