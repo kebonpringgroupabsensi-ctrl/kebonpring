@@ -85,7 +85,7 @@ export default function SAAdmin() {
     }
   };
 
-  const confirmDelete = (admin) => {
+  const openDelete = (admin) => {
     setDeleteTarget(admin);
     setShowDeleteModal(true);
   };
@@ -167,7 +167,7 @@ export default function SAAdmin() {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => openEdit(admin)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', marginRight: '0.5rem' }}><Edit size={14} /></button>
-                        <button onClick={() => confirmDelete(admin)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                        <button onClick={() => openDelete(admin)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))

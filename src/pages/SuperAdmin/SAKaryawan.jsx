@@ -13,6 +13,7 @@ const POSITIONS = ['Manager', 'Kasir', 'Koki', 'Waiter', 'Admin Cabang', 'Kebers
 
 export default function SAKaryawan() {
   const queryClient = useQueryClient();
+  console.log("SAKaryawan Component Loaded - Delete Fixed"); // DEBUG
   const [search, setSearch] = useState('');
   const [filterBranch, setFilterBranch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
