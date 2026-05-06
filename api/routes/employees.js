@@ -129,7 +129,10 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: authError.message });
     }
 
-    const profileUpdate = {
+    const profileData = {
+      id: authData.user.id,
+      full_name,
+      email,
       nik: nik || null,
       phone: phone || null,
       branch_id: targetBranch && targetBranch !== '' ? targetBranch : null,
@@ -138,31 +141,16 @@ router.post('/', async (req, res) => {
       role: targetRole,
     };
 
-    let updateError = null;
-    let employeeData = null;
+    const { data: employeeData, error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .upsert(profileData)
+      .select('*, branches(id, name)')
+      .single();
 
-    // Try to update multiple times if necessary (trigger might be slow)
-    for (let i = 0; i < 3; i++) {
-      const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .update(profileUpdate)
-        .eq('id', authData.user.id)
-        .select('*, branches(id, name)');
-
-      if (!error && data && data.length > 0) {
-        updateError = null;
-        employeeData = data[0];
-        break;
-      }
-      updateError = error || new Error('No data returned');
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
-    }
-
-    if (!employeeData) {
+    if (updateError) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      const errorMessage = updateError?.message || 'Data tidak ditemukan setelah update';
-      console.error('Profile creation error after retries:', updateError);
-      return res.status(500).json({ error: `Gagal membuat profil: ${errorMessage}` });
+      console.error('Profile creation error:', updateError);
+      return res.status(500).json({ error: `Gagal membuat profil: ${updateError.message}` });
     }
 
     return res.status(201).json({

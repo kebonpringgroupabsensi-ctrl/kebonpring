@@ -114,7 +114,10 @@ router.post('/register', async (req, res) => {
 
     // Update profile with additional data (profile is auto-created by trigger)
     // We use a small delay or upsert to handle potential race conditions with the trigger
-    const profileUpdate = {
+    const profileData = {
+      id: authData.user.id,
+      full_name,
+      email,
       nik: nik || null,
       phone: phone || null,
       branch_id: branch_id && branch_id !== '' ? branch_id : null,
@@ -124,30 +127,15 @@ router.post('/register', async (req, res) => {
       employee_status: 'aktif',
     };
 
-    // Try to update multiple times if necessary (trigger might be slow)
-    let updateError = null;
-    let updateSuccess = false;
-    for (let i = 0; i < 3; i++) {
-      const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .update(profileUpdate)
-        .eq('id', authData.user.id)
-        .select();
-      
-      if (!error && data && data.length > 0) {
-        updateSuccess = true;
-        updateError = null;
-        break;
-      }
-      updateError = error || new Error('No data returned');
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
-    }
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .upsert(profileData);
 
-    if (!updateSuccess) {
-      console.error('Profile update error after retries:', updateError);
+    if (updateError) {
+      console.error('Profile update error:', updateError);
       // Rollback: delete auth user if profile update fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return res.status(500).json({ error: 'Gagal menyimpan data profil karyawan.' });
+      return res.status(500).json({ error: `Gagal menyimpan data profil: ${updateError.message}` });
     }
 
     return res.status(201).json({
