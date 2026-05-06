@@ -26,8 +26,13 @@ export default function SAShift() {
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleChanges, setScheduleChanges] = useState({});
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('');
 
-  useEffect(() => { fetchShiftsAndEmployees(); }, []);
+  useEffect(() => { 
+    fetchShiftsAndEmployees(); 
+    api.get('/branches/all-admin').then(setBranches).catch(console.error);
+  }, []);
   useEffect(() => { if (selectedEmployee) fetchAssignments(); }, [selectedEmployee, calMonth, calYear]);
 
   const fetchShiftsAndEmployees = async () => {
@@ -233,9 +238,24 @@ export default function SAShift() {
 
         {/* Controls */}
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select className="form-input" style={{ flex: 1, minWidth: '180px' }} value={selectedEmployee} onChange={e => setSelectedEmployee(e.target.value)}>
-            <option value="">-- Pilih Karyawan --</option>
-            {employees.map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.branches?.name || 'No Branch'})</option>)}
+          <div style={{ width: '200px' }}>
+            <select className="form-input" value={selectedBranch} onChange={e => { setSelectedBranch(e.target.value); setSelectedEmployee(''); }}>
+              <option value="">-- Pilih Cabang --</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+          <select 
+            className="form-input" 
+            style={{ flex: 1, minWidth: '180px' }} 
+            value={selectedEmployee} 
+            onChange={e => setSelectedEmployee(e.target.value)}
+            disabled={!selectedBranch}
+          >
+            <option value="">{selectedBranch ? '-- Pilih Karyawan --' : '-- Pilih Cabang Dulu --'}</option>
+            {employees
+              .filter(e => !selectedBranch || e.branch_id === selectedBranch)
+              .map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.position || 'Staf'})</option>)
+            }
           </select>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else setCalMonth(calMonth - 1); }} style={{ background: 'none', border: '1px solid var(--surface-border)', borderRadius: '8px', padding: '0.5rem', cursor: 'pointer', display: 'flex' }}><ChevronLeft size={18} /></button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api, getUser } from '../../services/api';
 import { Camera, CheckCircle, XCircle, MapPin, ScanFace, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { compressImage } from '../../utils/imageUtils';
 import FaceRegisterModal from '../../components/FaceRegisterModal';
 import { loadFaceModels, extractFaceDescriptor, isMatch } from '../../services/faceService';
 
@@ -87,7 +88,7 @@ export default function KaryawanAbsen() {
     setShowScanModal(true);
   };
 
-  const executeAction = async (faceVerified = false) => {
+  const executeAction = async (faceVerified = false, photo = null) => {
     setShowScanModal(false);
     if (!pendingAction) return;
 
@@ -97,13 +98,13 @@ export default function KaryawanAbsen() {
       const locationPayload = location ? { latitude: location.lat, longitude: location.lng } : {};
 
       if (pendingAction === 'check_in') {
-        result = await api.post('/attendances/check-in', { ...locationPayload, face_verified: faceVerified });
+        result = await api.post('/attendances/check-in', { ...locationPayload, face_verified: faceVerified, photo });
       } else if (pendingAction === 'break_start') {
         result = await api.post('/attendances/break/start', {});
       } else if (pendingAction === 'break_end') {
-        result = await api.post('/attendances/break/end', { face_verified: faceVerified });
+        result = await api.post('/attendances/break/end', { face_verified: faceVerified, photo });
       } else if (pendingAction === 'check_out') {
-        result = await api.post('/attendances/check-out', { ...locationPayload, face_verified: faceVerified });
+        result = await api.post('/attendances/check-out', { ...locationPayload, face_verified: faceVerified, photo });
       }
 
       showMessage(result?.message || 'Berhasil!', 'success');
@@ -343,7 +344,7 @@ export default function KaryawanAbsen() {
         <FaceScanModal
           userId={user?.id}
           action={pendingAction}
-          onVerified={() => executeAction(true)}
+          onVerified={(photo) => executeAction(true, photo)}
           onSkip={() => executeAction(false)}
           onClose={() => { setShowScanModal(false); setPendingAction(null); }}
         />
@@ -423,10 +424,24 @@ function FaceScanModal({ action, onVerified, onSkip, onClose }) {
         const matched = isMatch(storedDescriptor, currentDescriptor);
 
         if (matched) {
+          // Capture photo for audit
+          let photo = null;
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoRef.current, 0, 0);
+            const rawPhoto = canvas.toDataURL('image/jpeg', 0.8);
+            photo = await compressImage(rawPhoto, 600, 0.6); // Compress to ~50KB
+          } catch (err) {
+            console.error('Failed to capture/compress photo:', err);
+          }
+
           setStatus('Verifikasi Berhasil! Memproses absensi...');
           setTimeout(() => {
             stopCamera();
-            onVerified();
+            onVerified(photo);
           }, 1000);
         } else {
           setStatus('Wajah tidak cocok. Silakan coba posisi lain atau bersihkan kamera.');

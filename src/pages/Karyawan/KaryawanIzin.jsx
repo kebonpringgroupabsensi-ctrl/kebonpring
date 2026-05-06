@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { Plus, X, Calendar, FileText, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
+import { Plus, X, Calendar, FileText, CheckCircle, XCircle, Clock, Trash2, Camera, MapPin, Image as ImageIcon } from 'lucide-react';
+import { compressImage, fileToBase64 } from '../../utils/imageUtils';
 
 const STATUS_MAP = {
   pending: { label: 'Menunggu', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.1)' },
@@ -17,7 +18,12 @@ export default function KaryawanIzin() {
     start_date: '',
     end_date: '',
     reason: '',
+    attachment: null,
+    latitude: null,
+    longitude: null,
   });
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const { data: leaves, isLoading } = useQuery({
     queryKey: ['karyawan-leaves'],
@@ -29,7 +35,10 @@ export default function KaryawanIzin() {
     onSuccess: () => {
       queryClient.invalidateQueries(['karyawan-leaves']);
       setShowModal(false);
-      setFormData({ leave_type: 'izin', start_date: '', end_date: '', reason: '' });
+      setFormData({ 
+        leave_type: 'izin', start_date: '', end_date: '', reason: '', 
+        attachment: null, latitude: null, longitude: null 
+      });
       alert('Pengajuan izin berhasil dikirim!');
     },
     onError: (err) => alert(err.message),
@@ -43,6 +52,43 @@ export default function KaryawanIzin() {
     },
     onError: (err) => alert(err.message),
   });
+  const getLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setFormData(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
+        setLocationLoading(false);
+      },
+      (err) => {
+        console.error('Error getting location:', err);
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const base64 = await fileToBase64(file);
+      const compressed = await compressImage(base64, 800, 0.7);
+      setFormData(prev => ({ ...prev, attachment: compressed }));
+    } catch (err) {
+      console.error('Error processing image:', err);
+      alert('Gagal memproses gambar. Silakan coba lagi.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openModal = () => {
+    setShowModal(true);
+    getLocation();
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -57,7 +103,7 @@ export default function KaryawanIzin() {
     <>
       <div className="mobile-header" style={{ padding: '1.5rem', background: 'var(--surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Pengajuan Izin</h1>
-        <button className="action-btn" onClick={() => setShowModal(true)}>
+        <button className="action-btn" onClick={openModal}>
           <Plus size={18} /> Ajukan
         </button>
       </div>
@@ -167,19 +213,54 @@ export default function KaryawanIzin() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Alasan / Keterangan</label>
-                <textarea 
-                  className="form-input" 
-                  rows="3" 
-                  placeholder="Contoh: Sakit demam, perlu istirahat" 
-                  required
-                  value={formData.reason} 
-                  onChange={e => setFormData({ ...formData, reason: e.target.value })}
-                ></textarea>
+                <label className="form-label">Bukti Foto / Surat (Opsional)</label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileChange}
+                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }}
+                  />
+                  <div style={{ 
+                    border: '2px dashed var(--surface-border)', 
+                    borderRadius: '12px', 
+                    padding: '1rem', 
+                    textAlign: 'center',
+                    color: formData.attachment ? 'var(--secondary)' : 'var(--text-muted)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: formData.attachment ? 'rgba(16,185,129,0.05)' : 'transparent'
+                  }}>
+                    {uploading ? (
+                      <div className="loader" style={{ width: '20px', height: '20px' }} />
+                    ) : formData.attachment ? (
+                      <>
+                        <CheckCircle size={24} />
+                        <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>Foto Berhasil Diunggah</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera size={24} />
+                        <span style={{ fontSize: '0.8rem' }}>Ambil Foto atau Pilih File</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Lokasi Saat Ini</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: formData.latitude ? 'var(--secondary)' : 'var(--text-muted)' }}>
+                  <MapPin size={16} />
+                  {locationLoading ? 'Mendeteksi lokasi...' : formData.latitude ? `${formData.latitude.toFixed(5)}, ${formData.longitude.toFixed(5)}` : 'Lokasi tidak terdeteksi'}
+                </div>
+              </div>
+
               <div className="modal-footer" style={{ padding: '1rem 0 0' }}>
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
-                <button type="submit" className="action-btn" disabled={mutation.isLoading}>
+                <button type="submit" className="action-btn" disabled={mutation.isLoading || uploading}>
                   {mutation.isLoading ? 'Mengirim...' : 'Kirim Pengajuan'}
                 </button>
               </div>

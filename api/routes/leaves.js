@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { authenticateRequest, authorizeRole } from '../lib/auth.js';
+import { uploadToDrive } from '../lib/gdrive.js';
 
 const router = Router();
 
@@ -63,10 +64,23 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { leave_type, start_date, end_date, reason, attachment_url } = req.body;
+    const { leave_type, start_date, end_date, reason, attachment, latitude, longitude } = req.body;
 
     if (!leave_type || !start_date || !end_date) {
       return res.status(400).json({ error: 'Jenis izin, tanggal mulai, dan tanggal selesai wajib diisi.' });
+    }
+
+    let finalAttachmentUrl = null;
+    if (attachment) {
+      try {
+        const fileName = `izin_${req.user.profile.full_name}_${new Date().getTime()}.jpg`;
+        finalAttachmentUrl = await uploadToDrive(fileName, 'image/jpeg', attachment);
+      } catch (uploadErr) {
+        console.error('Failed to upload leave attachment to GDrive:', uploadErr);
+        // Continue without attachment if upload fails, or return error?
+        // For leave proofs, it might be better to return error
+        return res.status(500).json({ error: 'Gagal mengunggah bukti izin ke Google Drive.' });
+      }
     }
 
     // Validate date range
@@ -82,7 +96,9 @@ router.post('/', async (req, res) => {
         start_date,
         end_date,
         reason,
-        attachment_url,
+        attachment_url: finalAttachmentUrl,
+        latitude,
+        longitude,
       })
       .select()
       .single();

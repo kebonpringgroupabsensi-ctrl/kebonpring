@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { FileText, Download, Search, Filter, Users, CheckCircle, XCircle, Calendar, MessageSquare } from 'lucide-react';
+import { FileText, Download, Search, Filter, Users, CheckCircle, XCircle, Calendar, MessageSquare, Camera, MapPin, Image as ImageIcon, Eye } from 'lucide-react';
 
 const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -15,6 +15,8 @@ export default function SALaporan() {
   const [filterBranch, setFilterBranch] = useState('');
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState(null);
+  const [attendanceLog, setAttendanceLog] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
   
   // Custom Modal State
   const [confirmModal, setConfirmModal] = useState({ show: false, id: null, status: null, name: '' });
@@ -31,7 +33,8 @@ export default function SALaporan() {
 
   useEffect(() => { 
     if (activeTab === 'report') fetchReport();
-    else fetchLeaveRequests();
+    else if (activeTab === 'leave_approval') fetchLeaveRequests();
+    else if (activeTab === 'log') fetchAttendanceLog();
   }, [activeTab, filterMonth, filterYear, filterBranch]);
 
   const fetchReport = async () => {
@@ -55,6 +58,20 @@ export default function SALaporan() {
       setLeaveRequests(result);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAttendanceLog = async () => {
+    setLoading(true);
+    try {
+      const params = { month: filterMonth, year: filterYear };
+      if (filterBranch) params.branch_id = filterBranch;
+      const result = await api.get('/attendances', params);
+      setAttendanceLog(result);
+    } catch (err) {
+      console.error('Fetch log error:', err);
     } finally {
       setLoading(false);
     }
@@ -195,7 +212,28 @@ export default function SALaporan() {
         >
           <CheckCircle size={18} /> Persetujuan Izin {leaveRequests.length > 0 && <span style={{ background: activeTab === 'leave_approval' ? 'white' : 'var(--primary)', color: activeTab === 'leave_approval' ? 'var(--primary)' : 'white', borderRadius: '50%', width: '20px', height: '20px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{leaveRequests.length}</span>}
         </button>
+        <button 
+          onClick={() => setActiveTab('log')}
+          style={{ 
+            padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: '700', border: 'none',
+            background: activeTab === 'log' ? 'var(--primary)' : 'var(--surface)',
+            color: activeTab === 'log' ? 'white' : 'var(--text-secondary)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            boxShadow: activeTab === 'log' ? '0 4px 12px rgba(16,185,129,0.3)' : 'none'
+          }}
+        >
+          <Camera size={18} /> Log Absensi
+        </button>
       </div>
+
+      {previewImage && (
+        <div className="modal-overlay" style={{ zIndex: 11000 }} onClick={() => setPreviewImage(null)}>
+          <div className="modal-content" style={{ maxWidth: '500px', padding: '0.5rem', background: 'transparent', boxShadow: 'none' }}>
+            <img src={previewImage} alt="Preview" style={{ width: '100%', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+            <button className="modal-close" style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', top: '10px', right: '10px' }} onClick={() => setPreviewImage(null)}><XCircle size={24} /></button>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'report' ? (
         <>
@@ -362,6 +400,19 @@ export default function SALaporan() {
                         <MessageSquare size={14} style={{ marginTop: '0.1rem', flexShrink: 0 }} />
                         <span>{leave.reason || '(Tidak ada alasan)'}</span>
                       </div>
+                      {leave.attachment_url && (
+                        <button 
+                          onClick={() => setPreviewImage(leave.attachment_url)}
+                          style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700' }}
+                        >
+                          <ImageIcon size={14} /> Lihat Bukti Foto
+                        </button>
+                      )}
+                      {(leave.latitude || leave.longitude) && (
+                        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                          <MapPin size={12} /> {leave.latitude?.toFixed(5)}, {leave.longitude?.toFixed(5)}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.75rem', position: 'relative', zIndex: 10 }}>
@@ -394,6 +445,98 @@ export default function SALaporan() {
                   </div>
                 ))
               )}
+            </div>
+          )}
+        </div>
+      ) : activeTab === 'log' ? (
+        <div className="content-card">
+          <div className="content-header">
+            <div>
+              <h2>Log Absensi Harian</h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Daftar aktivitas absensi individu secara mendetail.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            <select className="form-input" style={{ width: '140px' }} value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))}>
+              {MONTHS_ID.map((m, i) => <option key={i} value={i}>{m}</option>)}
+            </select>
+            <select className="form-input" style={{ width: '100px' }} value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))}>
+              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <select className="form-input" style={{ width: '160px' }} value={filterBranch} onChange={e => setFilterBranch(e.target.value)}>
+              <option value="">Semua Cabang</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+            <div style={{ flex: 1, minWidth: '180px', position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input type="text" placeholder="Cari nama..." className="form-input" style={{ paddingLeft: '2.5rem' }} value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem' }}><div className="loader" style={{ width: '30px', height: '30px', margin: '0 auto' }} /></div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <th style={{ padding: '0.75rem 1rem' }}>Tanggal / Nama</th>
+                    <th>Status</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Lokasi</th>
+                    <th>Foto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceLog
+                    .filter(att => !search || att.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()))
+                    .map((att) => (
+                    <tr key={att.id} style={{ borderBottom: '1px solid var(--surface-border)', fontSize: '0.85rem' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: '700' }}>{new Date(att.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{att.profiles?.full_name}</div>
+                      </td>
+                      <td>
+                        <span style={{ 
+                          padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700',
+                          background: att.status === 'hadir' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+                          color: att.status === 'hadir' ? 'var(--secondary)' : '#f59e0b'
+                        }}>
+                          {att.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: '700' }}>{att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_in_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi'}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: '700' }}>{att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_out_time ? (att.check_out_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi') : ''}</div>
+                      </td>
+                      <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        <div>IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)}</div>
+                        {att.check_out_time && <div>OUT: {att.check_out_latitude?.toFixed(4)}, {att.check_out_longitude?.toFixed(4)}</div>}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                          {att.check_in_photo_url && (
+                            <button onClick={() => setPreviewImage(att.check_in_photo_url)} className="btn-ghost" style={{ padding: '0.4rem', minWidth: 'auto' }} title="Foto Masuk">
+                              <Camera size={16} />
+                            </button>
+                          )}
+                          {att.check_out_photo_url && (
+                            <button onClick={() => setPreviewImage(att.check_out_photo_url)} className="btn-ghost" style={{ padding: '0.4rem', minWidth: 'auto', color: 'var(--error)' }} title="Foto Pulang">
+                              <Camera size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

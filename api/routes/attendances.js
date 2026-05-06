@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { authenticateRequest, authorizeRole } from '../lib/auth.js';
+import { uploadToDrive } from '../lib/gdrive.js';
 
 const router = Router();
 
@@ -108,7 +109,7 @@ router.get('/today', async (req, res) => {
  */
 router.post('/check-in', async (req, res) => {
   try {
-    const { latitude, longitude, face_verified, date } = req.body;
+    const { latitude, longitude, face_verified, date, photo } = req.body;
     const profile = req.user.profile;
     const today = date || new Date().toISOString().split('T')[0];
 
@@ -197,6 +198,17 @@ router.post('/check-in', async (req, res) => {
       }
     }
 
+    let photoUrl = null;
+    if (photo) {
+      try {
+        const fileName = `checkin_${profile.full_name}_${new Date().getTime()}.jpg`;
+        photoUrl = await uploadToDrive(fileName, 'image/jpeg', photo);
+      } catch (uploadErr) {
+        console.error('Check-in photo upload error:', uploadErr);
+        // We continue even if photo upload fails to not block attendance
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('attendances')
       .insert({
@@ -209,6 +221,7 @@ router.post('/check-in', async (req, res) => {
         check_in_latitude: latitude,
         check_in_longitude: longitude,
         check_in_face_verified: face_verified || false,
+        check_in_photo_url: photoUrl,
         is_late: isLate,
         late_minutes: lateMinutes,
       })
@@ -339,7 +352,7 @@ router.post('/break/end', async (req, res) => {
 router.post('/check-out', async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const { latitude, longitude, face_verified } = req.body;
+    const { latitude, longitude, face_verified, photo } = req.body;
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
       .from('attendances')
@@ -404,6 +417,16 @@ router.post('/check-out', async (req, res) => {
       }
     }
 
+    let photoUrl = null;
+    if (photo) {
+      try {
+        const fileName = `checkout_${req.user.profile.full_name}_${new Date().getTime()}.jpg`;
+        photoUrl = await uploadToDrive(fileName, 'image/jpeg', photo);
+      } catch (uploadErr) {
+        console.error('Check-out photo upload error:', uploadErr);
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('attendances')
       .update({
@@ -411,6 +434,7 @@ router.post('/check-out', async (req, res) => {
         check_out_latitude: latitude,
         check_out_longitude: longitude,
         check_out_face_verified: face_verified || false,
+        check_out_photo_url: photoUrl,
         total_work_minutes: totalWorkMinutes,
         notes: isEarlyLeave ? `Pulang lebih awal ${earlyLeaveMinutes} menit` : attendance.notes
       })
