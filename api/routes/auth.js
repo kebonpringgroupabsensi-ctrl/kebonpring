@@ -126,21 +126,24 @@ router.post('/register', async (req, res) => {
 
     // Try to update multiple times if necessary (trigger might be slow)
     let updateError = null;
+    let updateSuccess = false;
     for (let i = 0; i < 3; i++) {
-      const { error } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from('profiles')
         .update(profileUpdate)
-        .eq('id', authData.user.id);
+        .eq('id', authData.user.id)
+        .select();
       
-      if (!error) {
+      if (!error && data && data.length > 0) {
+        updateSuccess = true;
         updateError = null;
         break;
       }
-      updateError = error;
+      updateError = error || new Error('No data returned');
       await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
     }
 
-    if (updateError) {
+    if (!updateSuccess) {
       console.error('Profile update error after retries:', updateError);
       // Rollback: delete auth user if profile update fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
