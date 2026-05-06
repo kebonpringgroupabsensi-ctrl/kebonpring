@@ -1,6 +1,4 @@
-// ============================================================
-// api.js — Centralized fetch wrapper with automatic auth token
-// ============================================================
+import { authService } from './authService';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -23,7 +21,7 @@ export function getUser() {
   }
 }
 
-async function request(path, options = {}) {
+async function request(path, options = {}, retry = true) {
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
@@ -37,6 +35,15 @@ async function request(path, options = {}) {
   });
 
   if (response.status === 401) {
+    if (retry) {
+      console.log('Unauthorized request, attempting token refresh...');
+      const newToken = await authService.refreshToken();
+      if (newToken) {
+        // Retry the request with the new token
+        return request(path, options, false);
+      }
+    }
+
     console.error('Unauthorized request to:', path, '- Logging out.');
     // Auto logout on unauthorized, but avoid redirect loops
     if (!window.location.pathname.includes('/login')) {

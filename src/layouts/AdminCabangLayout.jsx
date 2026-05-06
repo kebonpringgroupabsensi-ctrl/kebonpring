@@ -4,6 +4,9 @@ import { useTheme } from '../ThemeContext';
 import { useState } from 'react';
 import RunningText from '../components/RunningText';
 
+import { authService } from '../services/authService';
+import { getUser } from '../services/api';
+
 const MENU_ITEMS = [
   { path: '/admin', label: 'Dashboard', icon: Home },
   { path: '/admin/karyawan', label: 'Karyawan Cabang', icon: Users },
@@ -18,10 +21,10 @@ export default function AdminCabangLayout() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const user = getUser();
 
   const handleLogout = () => {
-    localStorage.removeItem('session');
-    localStorage.removeItem('user');
+    authService.logout();
     window.location.href = '/login';
   };
 
@@ -83,9 +86,9 @@ export default function AdminCabangLayout() {
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle Theme">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button className="profile-btn">
+            <button className="profile-btn" onClick={() => navigate('/admin/profil')}>
               <User size={18} />
-              <span>Admin Madiun</span>
+              <span>{user?.full_name?.split(' ')[0] || 'Admin'} ({user?.branches?.name || 'Cabang'})</span>
             </button>
           </div>
         </header>

@@ -164,4 +164,33 @@ router.post('/logout', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/auth/refresh
+ * Refresh session with refresh_token
+ */
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(400).json({ error: 'Refresh token wajib diisi.' });
+    }
+
+    const { data, error } = await supabaseAdmin.auth.refreshSession({ refresh_token });
+
+    if (error) {
+      return res.status(401).json({ error: 'Sesi kedaluwarsa. Silakan login kembali.' });
+    }
+
+    return res.json({
+      message: 'Sesi diperbarui!',
+      session: data.session,
+      user: data.user,
+    });
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    return res.status(500).json({ error: 'Gagal memperbarui sesi.' });
+  }
+});
+
 export default router;

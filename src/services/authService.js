@@ -52,5 +52,37 @@ export const authService = {
   getSession() {
     const session = localStorage.getItem('session');
     return session ? JSON.parse(session) : null;
+  },
+
+  async refreshToken() {
+    const session = this.getSession();
+    if (!session || !session.refresh_token) return null;
+
+    try {
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      // Update storage
+      localStorage.setItem('session', JSON.stringify(data.session));
+      // Note: We don't necessarily need to update the 'user' if it hasn't changed,
+      // but Supabase returns the user object in the refresh response.
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
+      return data.session.access_token;
+    } catch (err) {
+      console.error('Failed to refresh token:', err);
+      this.logout();
+      return null;
+    }
   }
 };
