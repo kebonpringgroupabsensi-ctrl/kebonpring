@@ -68,6 +68,7 @@ router.post('/register', async (req, res) => {
       password,
       branch_id,
       position,
+      employment_status,
     } = req.body;
 
     // Validate required fields
@@ -86,10 +87,9 @@ router.post('/register', async (req, res) => {
       const { data: existingNik } = await supabaseAdmin
         .from('profiles')
         .select('id')
-        .eq('nik', nik)
-        .single();
+        .eq('nik', nik);
 
-      if (existingNik) {
+      if (existingNik && existingNik.length > 0) {
         return res.status(400).json({ error: 'NIK sudah terdaftar di sistem.' });
       }
     }
@@ -121,7 +121,7 @@ router.post('/register', async (req, res) => {
         branch_id,
         position,
         role: 'karyawan',
-        employment_status: 'kontrak',
+        employment_status: employment_status || 'kontrak',
         employee_status: 'aktif',
       })
       .eq('id', authData.user.id);

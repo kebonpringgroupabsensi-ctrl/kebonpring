@@ -30,7 +30,8 @@ export default function Login() {
     password: '',
     confirmPassword: '',
     branch_id: '',
-    position: ''
+    position: '',
+    employment_status: 'kontrak'
   });
 
   // Branches State
@@ -120,7 +121,8 @@ export default function Login() {
         phone: registerData.phone,
         password: registerData.password,
         branch_id: registerData.branch_id,
-        position: registerData.position
+        position: registerData.position,
+        employment_status: registerData.employment_status
       });
       
       alert('Pendaftaran berhasil! Silakan login dengan akun Anda.');
@@ -386,6 +388,23 @@ export default function Login() {
                       onChange={handleRegisterChange}
                       required 
                     />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status Karyawan</label>
+                  <div className="input-wrapper">
+                    <Briefcase className="input-icon" size={16} style={{ left: '12px', zIndex: 1 }} />
+                    <select 
+                      name="employment_status"
+                      className="form-input" 
+                      style={{ paddingLeft: '2.5rem' }} 
+                      value={registerData.employment_status}
+                      onChange={handleRegisterChange}
+                      required
+                    >
+                      <option value="kontrak">Kontrak</option>
+                      <option value="tetap">Tetap</option>
+                    </select>
                   </div>
                 </div>
               </div>
