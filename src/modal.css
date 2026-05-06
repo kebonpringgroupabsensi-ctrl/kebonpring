@@ -4,12 +4,11 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* CRITICAL: Start from top */
+  justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(10px);
-  padding: 60px 20px; /* Generous padding for scrolling */
+  padding: 20px;
   overflow-y: auto;
 }
 
@@ -23,8 +22,7 @@
   border: 1px solid var(--surface-border);
   animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  margin-top: auto;
-  margin-bottom: auto; /* auto margins on flex item will center it if there's space, or keep it at top if not */
+  margin: auto; /* Centering while allowing scroll */
   flex-shrink: 0;
 }
 
