@@ -71,11 +71,16 @@ router.get('/:id', async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('*, branches(id, name, latitude, longitude)')
-      .eq('id', req.params.id)
-      .single();
+      .eq('id', req.params.id);
 
     if (error) throw error;
-    return res.json(data);
+    
+    const employee = data && data.length > 0 ? data[0] : null;
+    if (!employee) {
+      return res.status(404).json({ error: 'Karyawan tidak ditemukan.' });
+    }
+
+    return res.json(employee);
   } catch (err) {
     console.error('Get employee error:', err);
     return res.status(500).json({ error: 'Gagal memuat data karyawan.' });
@@ -136,17 +141,23 @@ router.post('/', async (req, res) => {
         role: targetRole,
       })
       .eq('id', authData.user.id)
-      .select('*, branches(id, name)')
-      .single();
+      .select('*, branches(id, name)');
 
     if (error) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      console.error('Profile creation error:', error);
       throw error;
+    }
+
+    const employee = data && data.length > 0 ? data[0] : null;
+    if (!employee) {
+      console.error('No employee data returned after update');
+      return res.status(500).json({ error: 'Gagal membuat profil karyawan.' });
     }
 
     return res.status(201).json({
       message: 'Karyawan berhasil ditambahkan.',
-      employee: data,
+      employee: employee,
     });
   } catch (err) {
     console.error('Create employee error:', err);
@@ -179,23 +190,32 @@ router.put('/:id', async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (position !== undefined) updateData.position = position;
 
-    // Only admins can change these fields
-    if (userRole === 'super_admin') {
-      if (branch_id !== undefined) updateData.branch_id = branch_id;
+    // Admins can change these fields
+    if (userRole === 'super_admin' || userRole === 'admin_cabang') {
       if (employment_status !== undefined) updateData.employment_status = employment_status;
       if (employee_status !== undefined) updateData.employee_status = employee_status;
-      if (role !== undefined) updateData.role = role;
+      
+      // Only super admin can change branch and role
+      if (userRole === 'super_admin') {
+        if (branch_id !== undefined) updateData.branch_id = branch_id;
+        if (role !== undefined) updateData.role = role;
+      }
     }
 
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .update(updateData)
       .eq('id', id)
-      .select('*, branches(id, name)')
-      .single();
+      .select('*, branches(id, name)');
 
     if (error) throw error;
-    return res.json(data);
+    
+    const updatedEmployee = data && data.length > 0 ? data[0] : null;
+    if (!updatedEmployee) {
+      return res.status(404).json({ error: 'Karyawan tidak ditemukan.' });
+    }
+
+    return res.json(updatedEmployee);
   } catch (err) {
     console.error('Update employee error:', err);
     return res.status(500).json({ error: 'Gagal mengupdate data karyawan.' });
@@ -243,11 +263,12 @@ router.put('/:id/face', async (req, res) => {
         face_registered: true,
       })
       .eq('id', id)
-      .select()
-      .single();
+      .select();
 
     if (error) throw error;
-    return res.json({ message: 'Data wajah berhasil disimpan.', data });
+    
+    const profile = data && data.length > 0 ? data[0] : null;
+    return res.json({ message: 'Data wajah berhasil disimpan.', data: profile });
   } catch (err) {
     console.error('Face update error:', err);
     return res.status(500).json({ error: 'Gagal menyimpan data wajah.' });

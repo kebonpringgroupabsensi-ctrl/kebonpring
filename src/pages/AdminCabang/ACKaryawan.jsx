@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../services/api';
 import { Users, Search, Edit, Trash2, Plus, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -185,9 +186,9 @@ export default function ACKaryawan() {
         </div>
       </div>
 
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-content" style={{ maxWidth: '650px' }}>
             <div className="modal-header">
               <h2>{editData ? 'Edit Karyawan' : 'Tambah Karyawan'}</h2>
               <button className="modal-close" onClick={() => setShowModal(false)}><X size={20} /></button>
@@ -195,32 +196,32 @@ export default function ACKaryawan() {
             
             {formError && <div style={{ color: 'var(--error)', background: 'rgba(239,68,68,0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>{formError}</div>}
             
-            <form onSubmit={handleSave} style={{ display: 'grid', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">Nama Lengkap</label>
-                <input required type="text" className="form-input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-              </div>
+            <form onSubmit={handleSave}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
+                  <label className="form-label">Nama Lengkap *</label>
+                  <input required type="text" className="form-input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+                </div>
+                <div className="form-group">
                   <label className="form-label">NIK</label>
-                  <input type="text" className="form-input" value={form.nik} onChange={(e) => setForm({ ...form, nik: e.target.value })} />
+                  <input type="text" className="form-input" value={form.nik} onChange={(e) => setForm({ ...form, nik: e.target.value })} placeholder="WRQ-001" />
+                </div>
+                {!editData && (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Email Login *</label>
+                      <input required type="email" className="form-input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    </div>
+                  </>
+                )}
+                <div className="form-group">
+                  <label className="form-label">{editData ? 'Password Baru' : 'Password Login *'}</label>
+                  <input required={!editData} type="password" className="form-input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={editData ? "Kosongkan jika tidak diubah" : "Min. 8 karakter"} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nomor HP</label>
-                  <input type="text" className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <input type="text" className="form-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="08xx" />
                 </div>
-              </div>
-              {!editData && (
-                <div className="form-group">
-                  <label className="form-label">Email Login</label>
-                  <input required={!editData} type="email" className="form-input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-              )}
-              <div className="form-group">
-                <label className="form-label">{editData ? 'Password Baru (Kosongkan jika tidak diubah)' : 'Password Login'}</label>
-                <input required={!editData} type="password" className="form-input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Jabatan</label>
                   <select className="form-input" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}>
@@ -235,25 +236,27 @@ export default function ACKaryawan() {
                     <option value="tetap">Tetap</option>
                   </select>
                 </div>
+                {editData && (
+                  <div className="form-group">
+                    <label className="form-label">Status Akun</label>
+                    <select className="form-input" value={form.employee_status} onChange={(e) => setForm({ ...form, employee_status: e.target.value })}>
+                      <option value="aktif">Aktif</option>
+                      <option value="non-aktif">Non-Aktif</option>
+                      <option value="cuti">Cuti</option>
+                    </select>
+                  </div>
+                )}
               </div>
-              {editData && (
-                <div className="form-group">
-                  <label className="form-label">Status Akun</label>
-                  <select className="form-input" value={form.employee_status} onChange={(e) => setForm({ ...form, employee_status: e.target.value })}>
-                    <option value="aktif">Aktif</option>
-                    <option value="non-aktif">Non-Aktif</option>
-                  </select>
-                </div>
-              )}
               <div className="modal-footer">
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
-                <button type="submit" className="btn-submit" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? 'Menyimpan...' : 'Simpan Karyawan'}
+                <button type="submit" className="action-btn" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? 'Menyimpan...' : <><Users size={18} /> {editData ? 'Simpan Perubahan' : 'Tambah Karyawan'}</>}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
