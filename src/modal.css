@@ -2,13 +2,12 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.88); /* Increased opacity to verify update */
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+  z-index: 2000; /* Higher z-index just in case */
+  backdrop-filter: blur(12px);
   overflow-y: auto;
 }
 
