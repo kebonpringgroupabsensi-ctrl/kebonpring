@@ -19,7 +19,7 @@ export async function authenticateRequest(req) {
 
   if (error || !user) {
     console.error('Vercel Auth Error:', error?.message || 'User not found');
-    const err = new Error('Token tidak valid atau sudah kedaluwarsa.');
+    const err = new Error(`Auth Error: ${error?.message || 'User not found'}`);
     err.statusCode = 401;
     throw err;
   }
@@ -32,7 +32,7 @@ export async function authenticateRequest(req) {
 
   if (profileError) {
     console.error(`Vercel Profile Fetch Error for user ${user.id}:`, profileError.message);
-    const err = new Error('Gagal memuat profil pengguna.');
+    const err = new Error(`Profile Fetch Error: ${profileError.message}`);
     err.statusCode = 500;
     throw err;
   }
@@ -41,7 +41,7 @@ export async function authenticateRequest(req) {
 
   if (!profile) {
     console.error(`Profile not found in database for auth user ${user.id}`);
-    const err = new Error('Profil pengguna tidak ditemukan di database.');
+    const err = new Error(`Profile Not Found in Database (User ID: ${user.id})`);
     err.statusCode = 401; // Keep 401 to force re-auth if profile is missing
     throw err;
   }

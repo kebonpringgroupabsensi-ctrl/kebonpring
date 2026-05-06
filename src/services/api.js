@@ -35,6 +35,12 @@ async function request(path, options = {}, retry = true) {
   });
 
   if (response.status === 401) {
+    const errorBody = await response.json().catch(() => ({}));
+    const errorMessage = errorBody.error || 'Unknown Error';
+    
+    // Debug Alert to catch the culprit
+    alert(`DEBUG LOGOUT:\nURL: ${path}\nError: ${errorMessage}\n\nSilakan lapor pesan ini ke saya.`);
+
     if (retry) {
       console.log('Unauthorized request, attempting token refresh...');
       const newToken = await authService.refreshToken();
