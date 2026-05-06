@@ -7,6 +7,18 @@ const router = Router();
 // Auth middleware for all routes
 router.use(async (req, res, next) => {
   try {
+    // DIAGNOSTIC: Check if service key is valid
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anon = process.env.SUPABASE_ANON_KEY;
+    
+    if (!key || key.length < 50) {
+      console.error('DIAGNOSTIC: Service Role Key missing or too short');
+    }
+    
+    if (key === anon && key !== undefined) {
+      req.key_error = "DIAGNOSTIC: Kunci Service Role Anda SAMA dengan Anon Key. Silakan perbaiki di Vercel.";
+    }
+
     req.user = await authenticateRequest(req);
     next();
   } catch (err) {
@@ -94,6 +106,10 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     authorizeRole(req.user, 'super_admin', 'admin_cabang');
+
+    if (req.key_error) {
+      return res.status(500).json({ error: req.key_error });
+    }
 
     const {
       full_name, nik, email, phone, password,
