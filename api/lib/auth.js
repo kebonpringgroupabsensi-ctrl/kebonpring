@@ -25,16 +25,24 @@ export async function authenticateRequest(req) {
   }
 
   // Fetch user profile
-  const { data: profile, error: profileError } = await supabaseAdmin
+  const { data: profiles, error: profileError } = await supabaseAdmin
     .from('profiles')
     .select('*, branches(name, latitude, longitude, radius_meters)')
-    .eq('id', user.id)
-    .single();
+    .eq('id', user.id);
 
   if (profileError) {
     console.error(`Vercel Profile Fetch Error for user ${user.id}:`, profileError.message);
-    const err = new Error('Profil pengguna tidak ditemukan.');
-    err.statusCode = 401;
+    const err = new Error('Gagal memuat profil pengguna.');
+    err.statusCode = 500;
+    throw err;
+  }
+
+  const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+
+  if (!profile) {
+    console.error(`Profile not found in database for auth user ${user.id}`);
+    const err = new Error('Profil pengguna tidak ditemukan di database.');
+    err.statusCode = 401; // Keep 401 to force re-auth if profile is missing
     throw err;
   }
 

@@ -37,10 +37,13 @@ async function request(path, options = {}) {
   });
 
   if (response.status === 401) {
-    // Auto logout on unauthorized
-    localStorage.removeItem('session');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+    console.error('Unauthorized request to:', path, '- Logging out.');
+    // Auto logout on unauthorized, but avoid redirect loops
+    if (!window.location.pathname.includes('/login')) {
+      localStorage.removeItem('session');
+      localStorage.removeItem('user');
+      window.location.href = '/login?expired=true';
+    }
     return;
   }
 

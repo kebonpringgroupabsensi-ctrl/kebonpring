@@ -13,7 +13,7 @@ const STATUS_LABELS = {
 };
 
 export default function KaryawanAbsen() {
-  const user = getUser();
+  const [user, setUser] = useState(getUser());
   const [attendance, setAttendance] = useState(null);
   const [shift, setShift] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -328,10 +328,11 @@ export default function KaryawanAbsen() {
           userId={user?.id}
           onSuccess={() => {
             setShowFaceModal(false);
-            // Refresh user data
+            // Update local user data without full reload to prevent session loss
             const updatedUser = { ...user, face_registered: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
-            window.location.reload();
+            setUser(updatedUser);
+            showMessage('Wajah berhasil didaftarkan!', 'success');
           }}
           onClose={() => setShowFaceModal(false)}
         />
