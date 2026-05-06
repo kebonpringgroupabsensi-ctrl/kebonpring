@@ -181,9 +181,10 @@ router.post('/refresh', async (req, res) => {
       return res.status(400).json({ error: 'Refresh token wajib diisi.' });
     }
 
-    const { data, error } = await supabaseAdmin.auth.refreshSession({ refresh_token });
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token });
 
     if (error) {
+      console.error('Supabase Refresh Error:', error.message);
       return res.status(401).json({ error: 'Sesi kedaluwarsa. Silakan login kembali.' });
     }
 
