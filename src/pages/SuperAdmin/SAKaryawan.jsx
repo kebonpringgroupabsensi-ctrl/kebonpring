@@ -107,6 +107,11 @@ export default function SAKaryawan() {
     saveMutation.mutate(payload);
   };
 
+  const openDelete = (emp) => {
+    setDeleteTarget(emp);
+    setShowDeleteModal(true);
+  };
+
   const handleDelete = () => {
     deleteMutation.mutate(deleteTarget.id);
   };
@@ -213,7 +218,7 @@ export default function SAKaryawan() {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => openEdit(emp)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', marginRight: '0.5rem' }}><Edit size={14} /></button>
-                        <button onClick={() => confirmDelete(emp)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                        <button onClick={() => openDelete(emp)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))
