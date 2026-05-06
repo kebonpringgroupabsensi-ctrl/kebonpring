@@ -145,6 +145,18 @@ router.post('/check-in', async (req, res) => {
     const settings = {};
     settingsList?.forEach(s => settings[s.key] = s.value);
 
+    // Helper to get parsed setting
+    const getSetting = (key, fallback) => {
+      const val = settings[key];
+      if (val === undefined || val === null) return fallback;
+      try {
+        // If it's a string like "\"4\"", JSON.parse will give "4"
+        return JSON.parse(val);
+      } catch (e) {
+        return val;
+      }
+    };
+
     // Get today's shift assignment
     const { data: assignment } = await supabaseAdmin
       .from('shift_assignments')
@@ -167,8 +179,8 @@ router.post('/check-in', async (req, res) => {
       shiftStart.setHours(sH, sM, 0, 0);
 
       // Validate Window
-      const beforeHours = parseFloat(settings.check_in_before_hours || 1);
-      const afterHours = parseFloat(settings.check_in_after_hours || 4);
+      const beforeHours = parseFloat(getSetting('check_in_before_hours', 1));
+      const afterHours = parseFloat(getSetting('check_in_after_hours', 4));
       
       const winStart = new Date(shiftStart);
       winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
@@ -386,13 +398,24 @@ router.post('/check-out', async (req, res) => {
       const settings = {};
       settingsList?.forEach(s => settings[s.key] = s.value);
 
+      // Helper to get parsed setting
+      const getSetting = (key, fallback) => {
+        const val = settings[key];
+        if (val === undefined || val === null) return fallback;
+        try {
+          return JSON.parse(val);
+        } catch (e) {
+          return val;
+        }
+      };
+
       const [eH, eM] = assignment.shifts.end_time.split(':').map(Number);
       const shiftEnd = new Date(now);
       shiftEnd.setHours(eH, eM, 0, 0);
 
       // Validate Window
-      const beforeHours = parseFloat(settings.check_out_before_hours || 1);
-      const afterHours = parseFloat(settings.check_out_after_hours || 4);
+      const beforeHours = parseFloat(getSetting('check_out_before_hours', 1));
+      const afterHours = parseFloat(getSetting('check_out_after_hours', 4));
       
       const winStart = new Date(shiftEnd);
       winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
