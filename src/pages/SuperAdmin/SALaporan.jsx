@@ -480,45 +480,57 @@ export default function SALaporan() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    <th style={{ padding: '0.75rem 1rem' }}>Tanggal / Nama</th>
-                    <th>Status</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Lokasi</th>
-                    <th>Foto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attendanceLog
-                    .filter(att => !search || att.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()))
-                    .map((att) => (
-                    <tr key={att.id} style={{ borderBottom: '1px solid var(--surface-border)', fontSize: '0.85rem' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontWeight: '700' }}>{new Date(att.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{att.profiles?.full_name}</div>
-                      </td>
-                      <td>
-                        <span style={{ 
-                          padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700',
-                          background: att.status === 'hadir' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                          color: att.status === 'hadir' ? 'var(--secondary)' : '#f59e0b'
-                        }}>
-                          {att.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: '700' }}>{att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_in_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi'}</div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: '700' }}>{att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_out_time ? (att.check_out_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi') : ''}</div>
-                      </td>
-                      <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        <div>IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)}</div>
-                        {att.check_out_time && <div>OUT: {att.check_out_latitude?.toFixed(4)}, {att.check_out_longitude?.toFixed(4)}</div>}
-                      </td>
+                    <tr style={{ borderBottom: '1px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                      <th style={{ padding: '0.75rem 1rem' }}>Tanggal / Nama</th>
+                      <th>Status</th>
+                      <th>Check In</th>
+                      <th>Check Out</th>
+                      <th>Durasi Kerja</th>
+                      <th>Durasi Istirahat</th>
+                      <th>Lokasi</th>
+                      <th>Foto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceLog
+                      .filter(att => !search || att.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()))
+                      .map((att) => (
+                      <tr key={att.id} style={{ borderBottom: '1px solid var(--surface-border)', fontSize: '0.85rem' }}>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ fontWeight: '700' }}>{new Date(att.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{att.profiles?.full_name}</div>
+                        </td>
+                        <td>
+                          <span style={{ 
+                            padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700',
+                            background: att.status === 'hadir' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+                            color: att.status === 'hadir' ? 'var(--secondary)' : '#f59e0b'
+                          }}>
+                            {att.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '700' }}>{att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_in_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi'}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '700' }}>{att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_out_time ? (att.check_out_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi') : ''}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                            {att.total_work_minutes ? `${Math.floor(att.total_work_minutes / 60)}j ${att.total_work_minutes % 60}m` : '-'}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
+                            {att.total_break_minutes ? `${Math.floor(att.total_break_minutes / 60)}j ${att.total_break_minutes % 60}m` : '-'}
+                          </div>
+                        </td>
+                        <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          <div>IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)}</div>
+                          {att.check_out_time && <div>OUT: {att.check_out_latitude?.toFixed(4)}, {att.check_out_longitude?.toFixed(4)}</div>}
+                        </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
                           {att.check_in_photo_url && (

@@ -383,6 +383,8 @@ export default function ACLaporan() {
                     <th>Status</th>
                     <th>Check In</th>
                     <th>Check Out</th>
+                    <th>Durasi Kerja</th>
+                    <th>Durasi Istirahat</th>
                     <th>Lokasi</th>
                     <th>Foto</th>
                   </tr>
@@ -412,6 +414,16 @@ export default function ACLaporan() {
                       <td>
                         <div style={{ fontWeight: '700' }}>{att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_out_time ? (att.check_out_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi') : ''}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                          {att.total_work_minutes ? `${Math.floor(att.total_work_minutes / 60)}j ${att.total_work_minutes % 60}m` : '-'}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {att.total_break_minutes ? `${Math.floor(att.total_break_minutes / 60)}j ${att.total_break_minutes % 60}m` : '-'}
+                        </div>
                       </td>
                       <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                         <div>IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)}</div>
