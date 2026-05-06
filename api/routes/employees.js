@@ -160,8 +160,9 @@ router.post('/', async (req, res) => {
 
     if (!employeeData) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      const errorMessage = updateError?.message || 'Data tidak ditemukan setelah update';
       console.error('Profile creation error after retries:', updateError);
-      return res.status(500).json({ error: 'Gagal membuat profil karyawan. Silakan coba lagi.' });
+      return res.status(500).json({ error: `Gagal membuat profil: ${errorMessage}` });
     }
 
     return res.status(201).json({
