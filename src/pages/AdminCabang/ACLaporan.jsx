@@ -276,7 +276,7 @@ export default function ACLaporan() {
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'leave_approval' ? (
         <div className="content-card">
           <div className="content-header">
             <div>
