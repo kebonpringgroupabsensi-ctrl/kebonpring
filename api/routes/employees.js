@@ -129,35 +129,44 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: authError.message });
     }
 
-    // Update profile
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        nik,
-        phone,
-        branch_id: targetBranch,
-        position,
-        employment_status: employment_status || 'kontrak',
-        role: targetRole,
-      })
-      .eq('id', authData.user.id)
-      .select('*, branches(id, name)');
+    const profileUpdate = {
+      nik: nik || null,
+      phone: phone || null,
+      branch_id: targetBranch && targetBranch !== '' ? targetBranch : null,
+      position: position || null,
+      employment_status: employment_status || 'kontrak',
+      role: targetRole,
+    };
 
-    if (error) {
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      console.error('Profile creation error:', error);
-      throw error;
+    let updateError = null;
+    let employeeData = null;
+
+    // Try to update multiple times if necessary (trigger might be slow)
+    for (let i = 0; i < 3; i++) {
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .update(profileUpdate)
+        .eq('id', authData.user.id)
+        .select('*, branches(id, name)');
+
+      if (!error && data && data.length > 0) {
+        updateError = null;
+        employeeData = data[0];
+        break;
+      }
+      updateError = error || new Error('No data returned');
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
     }
 
-    const employee = data && data.length > 0 ? data[0] : null;
-    if (!employee) {
-      console.error('No employee data returned after update');
-      return res.status(500).json({ error: 'Gagal membuat profil karyawan.' });
+    if (!employeeData) {
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      console.error('Profile creation error after retries:', updateError);
+      return res.status(500).json({ error: 'Gagal membuat profil karyawan. Silakan coba lagi.' });
     }
 
     return res.status(201).json({
       message: 'Karyawan berhasil ditambahkan.',
-      employee: employee,
+      employee: employeeData,
     });
   } catch (err) {
     console.error('Create employee error:', err);
