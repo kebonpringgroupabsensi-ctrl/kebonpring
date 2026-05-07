@@ -136,11 +136,19 @@ export default function SAShift() {
     e.preventDefault();
     setSaving(true);
     setFormError('');
+    
+    // Sanitize numeric fields
+    const sanitizedForm = {
+      ...shiftForm,
+      late_tolerance_minutes: parseInt(shiftForm.late_tolerance_minutes) || 0,
+      max_break_minutes: parseInt(shiftForm.max_break_minutes) || 0,
+    };
+
     try {
       if (editShift) {
-        await api.put(`/shifts/${editShift.id}`, shiftForm);
+        await api.put(`/shifts/${editShift.id}`, sanitizedForm);
       } else {
-        await api.post('/shifts', shiftForm);
+        await api.post('/shifts', sanitizedForm);
       }
       setShowShiftModal(false);
       fetchShiftsAndEmployees();

@@ -50,16 +50,23 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nama, tipe, jam mulai, dan jam selesai wajib diisi.' });
     }
 
+    const insertData = {
+      name, shift_type, start_time, end_time,
+      break_start: break_start === '' ? null : break_start,
+      break_end: break_end === '' ? null : break_end,
+      late_tolerance_minutes: late_tolerance_minutes || 0,
+      max_break_minutes: max_break_minutes || 0,
+    };
+
     const { data, error } = await supabaseAdmin
       .from('shifts')
-      .insert({
-        name, shift_type, start_time, end_time,
-        break_start, break_end, late_tolerance_minutes, max_break_minutes,
-      })
+      .insert(insertData)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error('Berhasil membuat shift tapi gagal mengambil data kembali.');
+    
     return res.status(201).json(data);
   } catch (err) {
     console.error('Create shift error:', err);
@@ -75,14 +82,22 @@ router.put('/:id', async (req, res) => {
   try {
     authorizeRole(req.user, 'super_admin');
 
+    const { id, created_at, updated_at, ...updateData } = req.body;
+
+    // Sanitize time fields: convert empty strings to null
+    if (updateData.break_start === '') updateData.break_start = null;
+    if (updateData.break_end === '') updateData.break_end = null;
+
     const { data, error } = await supabaseAdmin
       .from('shifts')
-      .update(req.body)
+      .update(updateData)
       .eq('id', req.params.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'Shift tidak ditemukan atau tidak ada perubahan yang disimpan.' });
+    
     return res.json(data);
   } catch (err) {
     console.error('Update shift error:', err);
