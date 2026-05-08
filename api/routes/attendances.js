@@ -86,7 +86,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/today', async (req, res) => {
   try {
-    const today = req.query.date || new Date().toISOString().split('T')[0];
+    const today = req.query.date || getTodayWIB();
 
     const { data, error } = await supabaseAdmin
       .from('attendances')
@@ -104,6 +104,47 @@ router.get('/today', async (req, res) => {
 });
 
 /**
+ * Helper: Get current time in WIB (UTC+7) as a Date-like object
+ * Vercel runs in UTC, so we must manually offset for WIB
+ */
+function getNowWIB() {
+  const now = new Date();
+  // Create a date shifted to WIB: add 7 hours to UTC
+  const wibOffset = 7 * 60 * 60 * 1000; // 7 hours in ms
+  return new Date(now.getTime() + wibOffset);
+}
+
+/**
+ * Helper: Create a WIB date for today with specific hours/minutes
+ * Builds a comparable date in the same "shifted" space as getNowWIB()
+ */
+function buildWIBTime(nowWIB, hours, minutes) {
+  const d = new Date(nowWIB);
+  d.setUTCHours(hours, minutes, 0, 0);
+  return d;
+}
+
+/**
+ * Helper: Format WIB time for display (HH:MM)
+ */
+function formatWIBTime(wibDate) {
+  const h = String(wibDate.getUTCHours()).padStart(2, '0');
+  const m = String(wibDate.getUTCMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+/**
+ * Helper: Get today's date string in WIB (YYYY-MM-DD)
+ */
+function getTodayWIB() {
+  const nowWIB = getNowWIB();
+  const y = nowWIB.getUTCFullYear();
+  const m = String(nowWIB.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(nowWIB.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * POST /api/attendances/check-in
  * Employee check-in with location & face verification
  */
@@ -111,7 +152,7 @@ router.post('/check-in', async (req, res) => {
   try {
     const { latitude, longitude, face_verified, date, photo } = req.body;
     const profile = req.user.profile;
-    const today = date || new Date().toISOString().split('T')[0];
+    const today = date || getTodayWIB();
 
     // Check if already checked in today
     const { data: existing } = await supabaseAdmin
@@ -150,7 +191,6 @@ router.post('/check-in', async (req, res) => {
       const val = settings[key];
       if (val === undefined || val === null) return fallback;
       try {
-        // If it's a string like "\"4\"", JSON.parse will give "4"
         return JSON.parse(val);
       } catch (e) {
         return val;
@@ -169,44 +209,43 @@ router.post('/check-in', async (req, res) => {
       return res.status(400).json({ error: 'Anda tidak memiliki jadwal kerja hari ini (Libur/Day Off).' });
     }
 
-    const now = new Date();
+    // Use WIB time for all time comparisons
+    const nowWIB = getNowWIB();
+    const now = new Date(); // Real UTC for storing in DB
     let isLate = false;
     let lateMinutes = 0;
 
     if (assignment.shifts) {
       const [sH, sM] = assignment.shifts.start_time.split(':').map(Number);
-      const shiftStart = new Date(now);
-      shiftStart.setHours(sH, sM, 0, 0);
+      const shiftStart = buildWIBTime(nowWIB, sH, sM);
 
       // Validate Window
       const beforeHours = parseFloat(getSetting('check_in_before_hours', 1));
       const afterHours = parseFloat(getSetting('check_in_after_hours', 4));
       
-      const winStart = new Date(shiftStart);
-      winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
-      
-      const winEnd = new Date(shiftStart);
-      winEnd.setMinutes(winEnd.getMinutes() + (afterHours * 60));
+      const winStart = new Date(shiftStart.getTime() - (beforeHours * 60 * 60 * 1000));
+      const winEnd = new Date(shiftStart.getTime() + (afterHours * 60 * 60 * 1000));
 
-      if (now < winStart) {
+      console.log(`[CHECK-IN DEBUG] nowWIB=${formatWIBTime(nowWIB)}, shiftStart=${formatWIBTime(shiftStart)}, winStart=${formatWIBTime(winStart)}, winEnd=${formatWIBTime(winEnd)}`);
+
+      if (nowWIB < winStart) {
         return res.status(400).json({ 
-          error: `Belum waktunya absen masuk. Absen dibuka mulai pukul ${winStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+          error: `Belum waktunya absen masuk. Absen dibuka mulai pukul ${formatWIBTime(winStart)}` 
         });
       }
-      if (now > winEnd) {
+      if (nowWIB > winEnd) {
         return res.status(400).json({ 
-          error: `Batas waktu absen masuk telah berakhir pada pukul ${winEnd.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+          error: `Batas waktu absen masuk telah berakhir pada pukul ${formatWIBTime(winEnd)}` 
         });
       }
 
       // Calculate lateness (considering tolerance)
       const tolerance = assignment.shifts.late_tolerance_minutes || 0;
-      const shiftStartWithTolerance = new Date(shiftStart);
-      shiftStartWithTolerance.setMinutes(shiftStartWithTolerance.getMinutes() + tolerance);
+      const shiftStartWithTolerance = new Date(shiftStart.getTime() + (tolerance * 60 * 1000));
 
-      if (now > shiftStartWithTolerance) {
+      if (nowWIB > shiftStartWithTolerance) {
         isLate = true;
-        lateMinutes = Math.round((now - shiftStartWithTolerance) / 60000);
+        lateMinutes = Math.round((nowWIB - shiftStartWithTolerance) / 60000);
       }
     }
 
@@ -260,7 +299,7 @@ router.post('/check-in', async (req, res) => {
  */
 router.post('/break/start', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayWIB();
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
       .from('attendances')
@@ -294,7 +333,7 @@ router.post('/break/start', async (req, res) => {
  */
 router.post('/break/end', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayWIB();
     const { face_verified } = req.body;
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
@@ -325,11 +364,11 @@ router.post('/break/end', async (req, res) => {
     let lateBreakMinutes = 0;
     if (assignment?.shifts?.break_end) {
       const [h, m] = assignment.shifts.break_end.split(':').map(Number);
-      const breakEnd = new Date(now);
-      breakEnd.setHours(h, m, 0, 0);
-      if (now > breakEnd) {
+      const nowWIB = getNowWIB();
+      const breakEndWIB = buildWIBTime(nowWIB, h, m);
+      if (nowWIB > breakEndWIB) {
         isLateBreak = true;
-        lateBreakMinutes = Math.round((now - breakEnd) / 60000);
+        lateBreakMinutes = Math.round((nowWIB - breakEndWIB) / 60000);
       }
     }
 
@@ -363,7 +402,7 @@ router.post('/break/end', async (req, res) => {
  */
 router.post('/check-out', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayWIB();
     const { latitude, longitude, face_verified, photo } = req.body;
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
@@ -409,34 +448,33 @@ router.post('/check-out', async (req, res) => {
         }
       };
 
+      const nowWIB = getNowWIB();
       const [eH, eM] = assignment.shifts.end_time.split(':').map(Number);
-      const shiftEnd = new Date(now);
-      shiftEnd.setHours(eH, eM, 0, 0);
+      const shiftEnd = buildWIBTime(nowWIB, eH, eM);
 
       // Validate Window
       const beforeHours = parseFloat(getSetting('check_out_before_hours', 1));
       const afterHours = parseFloat(getSetting('check_out_after_hours', 4));
       
-      const winStart = new Date(shiftEnd);
-      winStart.setMinutes(winStart.getMinutes() - (beforeHours * 60));
-      
-      const winEnd = new Date(shiftEnd);
-      winEnd.setMinutes(winEnd.getMinutes() + (afterHours * 60));
+      const winStart = new Date(shiftEnd.getTime() - (beforeHours * 60 * 60 * 1000));
+      const winEnd = new Date(shiftEnd.getTime() + (afterHours * 60 * 60 * 1000));
 
-      if (now < winStart) {
+      console.log(`[CHECK-OUT DEBUG] nowWIB=${formatWIBTime(nowWIB)}, shiftEnd=${formatWIBTime(shiftEnd)}, winStart=${formatWIBTime(winStart)}, winEnd=${formatWIBTime(winEnd)}`);
+
+      if (nowWIB < winStart) {
         return res.status(400).json({ 
-          error: `Belum waktunya absen pulang. Absen dibuka mulai pukul ${winStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+          error: `Belum waktunya absen pulang. Absen dibuka mulai pukul ${formatWIBTime(winStart)}` 
         });
       }
-      if (now > winEnd) {
+      if (nowWIB > winEnd) {
         return res.status(400).json({ 
-          error: `Batas waktu absen pulang telah berakhir pada pukul ${winEnd.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` 
+          error: `Batas waktu absen pulang telah berakhir pada pukul ${formatWIBTime(winEnd)}` 
         });
       }
 
-      if (now < shiftEnd) {
+      if (nowWIB < shiftEnd) {
         isEarlyLeave = true;
-        earlyLeaveMinutes = Math.round((shiftEnd - now) / 60000);
+        earlyLeaveMinutes = Math.round((shiftEnd - nowWIB) / 60000);
       }
     }
 

@@ -4,6 +4,30 @@ import { authenticateRequest, authorizeRole } from '../lib/auth.js';
 
 const router = Router();
 
+/**
+ * Helper: Get today's date string in WIB (UTC+7) timezone
+ * Vercel runs in UTC, so we must manually offset for Indonesian time
+ */
+function getTodayWIB() {
+  const now = new Date();
+  const wibOffset = 7 * 60 * 60 * 1000;
+  const wib = new Date(now.getTime() + wibOffset);
+  const y = wib.getUTCFullYear();
+  const m = String(wib.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(wib.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Helper: Get current month/year in WIB
+ */
+function getCurrentMonthYearWIB() {
+  const now = new Date();
+  const wibOffset = 7 * 60 * 60 * 1000;
+  const wib = new Date(now.getTime() + wibOffset);
+  return { month: wib.getUTCMonth(), year: wib.getUTCFullYear() };
+}
+
 // Auth middleware for all routes
 router.use(async (req, res, next) => {
   try {
@@ -22,7 +46,7 @@ router.get('/super-admin', async (req, res) => {
   try {
     authorizeRole(req.user, 'super_admin');
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayWIB();
 
     // Total employees
     const { count: totalEmployees } = await supabaseAdmin
@@ -102,7 +126,7 @@ router.get('/admin-cabang', async (req, res) => {
   try {
     authorizeRole(req.user, 'admin_cabang');
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayWIB();
     const branchId = req.user.profile.branch_id;
 
     // Employee count in this branch
@@ -185,9 +209,8 @@ router.get('/admin-cabang', async (req, res) => {
 router.get('/karyawan', async (req, res) => {
   try {
     const profile = req.user.profile;
-    const today = req.query.date || new Date().toISOString().split('T')[0];
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const today = req.query.date || getTodayWIB();
+    const { month: currentMonth, year: currentYear } = getCurrentMonthYearWIB();
     const startOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
     const endMonth = currentMonth + 2;
     const endYear = endMonth > 12 ? currentYear + 1 : currentYear;

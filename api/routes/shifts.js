@@ -64,7 +64,15 @@ router.post('/', async (req, res) => {
       .select()
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[SHIFT CREATE] Supabase error:', JSON.stringify(error));
+      if (error.message && error.message.includes('row-level security')) {
+        return res.status(403).json({ 
+          error: 'Gagal membuat shift: Akses ditolak oleh kebijakan keamanan database. Pastikan SUPABASE_SERVICE_ROLE_KEY sudah benar di Vercel.' 
+        });
+      }
+      throw error;
+    }
     if (!data) throw new Error('Berhasil membuat shift tapi gagal mengambil data kembali.');
     
     return res.status(201).json(data);
@@ -95,7 +103,15 @@ router.put('/:id', async (req, res) => {
       .select()
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[SHIFT UPDATE] Supabase error:', JSON.stringify(error));
+      if (error.message && error.message.includes('row-level security')) {
+        return res.status(403).json({ 
+          error: 'Gagal mengupdate shift: Akses ditolak oleh kebijakan keamanan database. Pastikan SUPABASE_SERVICE_ROLE_KEY sudah benar di Vercel.' 
+        });
+      }
+      throw error;
+    }
     if (!data) return res.status(404).json({ error: 'Shift tidak ditemukan atau tidak ada perubahan yang disimpan.' });
     
     return res.json(data);
@@ -191,12 +207,23 @@ router.post('/assignments/bulk', async (req, res) => {
       return res.status(400).json({ error: 'Data jadwal tidak valid.' });
     }
 
+    console.log(`[SHIFT ASSIGN] Saving ${assignments.length} assignments. Service key present: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`);
+
     const { data, error } = await supabaseAdmin
       .from('shift_assignments')
       .upsert(assignments, { onConflict: 'employee_id,date' })
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[SHIFT ASSIGN] Supabase error:', JSON.stringify(error));
+      // Check if this is an RLS error
+      if (error.message && error.message.includes('row-level security')) {
+        return res.status(403).json({ 
+          error: 'Gagal menyimpan jadwal: Akses ditolak oleh kebijakan keamanan database. Pastikan SUPABASE_SERVICE_ROLE_KEY sudah benar di Vercel Environment Variables.' 
+        });
+      }
+      throw error;
+    }
     return res.json({ message: `${data.length} jadwal berhasil disimpan.`, data });
   } catch (err) {
     console.error('Bulk assign error:', err);
