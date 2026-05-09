@@ -21,6 +21,7 @@ router.post('/login', async (req, res) => {
     });
 
     if (error) {
+      console.error('❌ Supabase Login Error:', error.message, error.status);
       return res.status(401).json({ error: 'Email atau password salah.' });
     }
 
