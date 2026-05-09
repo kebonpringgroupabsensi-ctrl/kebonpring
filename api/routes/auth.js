@@ -22,7 +22,10 @@ router.post('/login', async (req, res) => {
 
     if (error) {
       console.error('❌ Supabase Login Error:', error.message, error.status);
-      return res.status(401).json({ error: 'Email atau password salah.' });
+      return res.status(401).json({ 
+        error: 'Email atau password salah.', 
+        debug_msg: error.message 
+      });
     }
 
     // Fetch profile with branch info
