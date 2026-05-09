@@ -78,18 +78,20 @@ export default function Login() {
       };
 
       const mappedRole = userRoleMap[data.user.role];
+      
       if (mappedRole !== activeRole.id) {
-        // Automatically switch to correct dashboard if role mismatch, 
-        // or you could show an error. Let's redirect to correct one.
-        const correctRole = ROLES.find(r => r.id === mappedRole);
-        if (correctRole) {
-          navigate(correctRole.path);
-        } else {
-          navigate(activeRole.path);
-        }
-      } else {
-        navigate(activeRole.path);
+        // Role mismatch: Logout and show error
+        authService.logout();
+        
+        let errorMessage = `Akun Anda terdaftar sebagai ${activeRole.id === 'karyawan' ? 'Admin/Owner' : 'Karyawan'}. `;
+        errorMessage += `Silakan klik tab "${ROLES.find(r => r.id === mappedRole)?.label || mappedRole}" untuk masuk.`;
+        
+        setError(errorMessage);
+        return;
       }
+
+      // Role matches: Proceed to dashboard
+      navigate(activeRole.path);
     } catch (err) {
       setError(err.message);
     } finally {
