@@ -6,15 +6,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing SUPABASE_URL or SUPABASE_ANON_KEY');
-} else {
-  console.log('📡 Supabase URL:', supabaseUrl);
-  console.log('🔑 Anon Key present:', !!supabaseAnonKey);
 }
 
 if (!supabaseServiceKey) {
   console.error('❌ CRITICAL: Missing SUPABASE_SERVICE_ROLE_KEY - admin operations will fail with RLS errors!');
-} else {
-  console.log('🔑 Service Role Key present:', !!supabaseServiceKey);
 }
 
 // Client for normal authenticated operations (respects RLS)
