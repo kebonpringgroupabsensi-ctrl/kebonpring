@@ -368,6 +368,17 @@ export default function ACLaporan() {
                           Catatan: {leave.review_notes}
                         </div>
                       )}
+                      {(leave.latitude || leave.longitude) && (
+                        <a 
+                          href={`https://www.google.com/maps?q=${leave.latitude},${leave.longitude}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem', textDecoration: 'none' }}
+                          title="Klik untuk buka di Google Maps"
+                        >
+                          <MapPin size={12} /> {leave.latitude?.toFixed(5)}, {leave.longitude?.toFixed(5)} (Klik Lihat Map)
+                        </a>
+                      )}
                     </div>
 
                     {leave.status === 'pending' ? (
@@ -481,8 +492,26 @@ export default function ACLaporan() {
                         </div>
                       </td>
                       <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                        <div>IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)}</div>
-                        {att.check_out_time && <div>OUT: {att.check_out_latitude?.toFixed(4)}, {att.check_out_longitude?.toFixed(4)}</div>}
+                        <a 
+                          href={`https://www.google.com/maps?q=${att.check_in_latitude},${att.check_in_longitude}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'inherit', textDecoration: 'none', display: 'block', marginBottom: '0.2rem' }}
+                          title="Klik lihat Map"
+                        >
+                          IN: {att.check_in_latitude?.toFixed(4)}, {att.check_in_longitude?.toFixed(4)} 📍
+                        </a>
+                        {att.check_out_time && (
+                          <a 
+                            href={`https://www.google.com/maps?q=${att.check_out_latitude},${att.check_out_longitude}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ color: 'inherit', textDecoration: 'none', display: 'block' }}
+                            title="Klik lihat Map"
+                          >
+                            OUT: {att.check_out_latitude?.toFixed(4)}, {att.check_out_longitude?.toFixed(4)} 📍
+                          </a>
+                        )}
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
