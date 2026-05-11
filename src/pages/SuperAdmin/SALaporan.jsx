@@ -13,6 +13,7 @@ export default function SALaporan() {
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth());
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterBranch, setFilterBranch] = useState('');
+  const [leaveStatusTab, setLeaveStatusTab] = useState('pending');
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState(null);
   const [attendanceLog, setAttendanceLog] = useState([]);
@@ -33,9 +34,9 @@ export default function SALaporan() {
 
   useEffect(() => { 
     if (activeTab === 'report') fetchReport();
-    else if (activeTab === 'leave_approval') fetchLeaveRequests();
+    else if (activeTab === 'leave_approval') fetchLeaveRequests(leaveStatusTab);
     else if (activeTab === 'log') fetchAttendanceLog();
-  }, [activeTab, filterMonth, filterYear, filterBranch]);
+  }, [activeTab, filterMonth, filterYear, filterBranch, leaveStatusTab]);
 
   const fetchReport = async () => {
     setLoading(true);
@@ -51,10 +52,10 @@ export default function SALaporan() {
     }
   };
 
-  const fetchLeaveRequests = async () => {
+  const fetchLeaveRequests = async (status = 'pending') => {
     setLoading(true);
     try {
-      const result = await api.get('/leaves', { status: 'pending' });
+      const result = await api.get('/leaves', { status });
       setLeaveRequests(result);
     } catch (err) {
       console.error(err);
@@ -85,7 +86,7 @@ export default function SALaporan() {
     try {
       const notes = status === 'approved' ? 'Disetujui oleh Admin' : 'Ditolak oleh Admin';
       await api.put(`/leaves/${id}/review`, { status, review_notes: notes });
-      await fetchLeaveRequests();
+      await fetchLeaveRequests(leaveStatusTab);
       showNotification(`Berhasil: Izin telah ${status === 'approved' ? 'disetujui' : 'ditolak'}.`, 'success');
     } catch (err) {
       console.error('Approval Error:', err);
@@ -349,11 +350,51 @@ export default function SALaporan() {
         </>
       ) : activeTab === 'leave_approval' ? (
         <div className="content-card">
-          <div className="content-header">
+          <div className="content-header" style={{ marginBottom: '1rem' }}>
             <div>
               <h2>Persetujuan Izin & Sakit</h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Daftar pengajuan izin karyawan yang menunggu persetujuan.</p>
             </div>
+          </div>
+
+          {/* Sub-tab Switcher */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', padding: '4px', background: 'var(--bg-color)', borderRadius: '12px', width: 'fit-content', border: '1px solid var(--surface-border)' }}>
+            <button 
+              onClick={() => setLeaveStatusTab('pending')}
+              style={{ 
+                padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', border: 'none',
+                background: leaveStatusTab === 'pending' ? 'white' : 'transparent',
+                color: leaveStatusTab === 'pending' ? 'var(--primary)' : 'var(--text-muted)',
+                boxShadow: leaveStatusTab === 'pending' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              Menunggu ({leaveStatusTab === 'pending' ? leaveRequests.length : '...'})
+            </button>
+            <button 
+              onClick={() => setLeaveStatusTab('approved')}
+              style={{ 
+                padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', border: 'none',
+                background: leaveStatusTab === 'approved' ? 'white' : 'transparent',
+                color: leaveStatusTab === 'approved' ? 'var(--secondary)' : 'var(--text-muted)',
+                boxShadow: leaveStatusTab === 'approved' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              Disetujui
+            </button>
+            <button 
+              onClick={() => setLeaveStatusTab('rejected')}
+              style={{ 
+                padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', border: 'none',
+                background: leaveStatusTab === 'rejected' ? 'white' : 'transparent',
+                color: leaveStatusTab === 'rejected' ? 'var(--error)' : 'var(--text-muted)',
+                boxShadow: leaveStatusTab === 'rejected' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              Ditolak
+            </button>
           </div>
 
           {loading ? (
@@ -363,7 +404,10 @@ export default function SALaporan() {
               {leaveRequests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--bg-color)', borderRadius: '16px', border: '2px dashed var(--surface-border)' }}>
                   <CheckCircle size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem', opacity: 0.5 }} />
-                  <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Tidak ada pengajuan izin yang menunggu persetujuan</p>
+                  <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+                    {leaveStatusTab === 'pending' ? 'Tidak ada pengajuan izin yang menunggu persetujuan' : 
+                     leaveStatusTab === 'approved' ? 'Belum ada izin yang disetujui' : 'Belum ada izin yang ditolak'}
+                  </p>
                 </div>
               ) : (
                 leaveRequests.map((leave) => (
@@ -408,40 +452,51 @@ export default function SALaporan() {
                           <ImageIcon size={14} /> Lihat Bukti Foto
                         </button>
                       )}
-                      {(leave.latitude || leave.longitude) && (
-                        <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                          <MapPin size={12} /> {leave.latitude?.toFixed(5)}, {leave.longitude?.toFixed(5)}
+                      {leave.review_notes && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          Catatan: {leave.review_notes}
                         </div>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.75rem', position: 'relative', zIndex: 10 }}>
-                      <button 
-                        onClick={() => triggerConfirm(leave.id, 'rejected', leave.profiles?.full_name)}
-                        disabled={processingId === leave.id}
-                        style={{ 
-                          padding: '0.75rem 1.25rem', borderRadius: '12px', border: '2px solid var(--error)',
-                          background: 'white', color: 'var(--error)', fontWeight: '800', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem',
-                          opacity: processingId === leave.id ? 0.5 : 1
-                        }}
-                      >
-                        <XCircle size={18} /> Tolak
-                      </button>
-                      <button 
-                        onClick={() => triggerConfirm(leave.id, 'approved', leave.profiles?.full_name)}
-                        disabled={processingId === leave.id}
-                        style={{ 
-                          padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none',
-                          background: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem',
-                          boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
-                          opacity: processingId === leave.id ? 0.5 : 1
-                        }}
-                      >
-                        {processingId === leave.id ? <div className="loader" style={{ width: '18px', height: '18px' }} /> : <CheckCircle size={18} />} Setujui
-                      </button>
-                    </div>
+                    {leave.status === 'pending' ? (
+                      <div style={{ display: 'flex', gap: '0.75rem', position: 'relative', zIndex: 10 }}>
+                        <button 
+                          onClick={() => triggerConfirm(leave.id, 'rejected', leave.profiles?.full_name)}
+                          disabled={processingId === leave.id}
+                          style={{ 
+                            padding: '0.75rem 1.25rem', borderRadius: '12px', border: '2px solid var(--error)',
+                            background: 'white', color: 'var(--error)', fontWeight: '800', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem',
+                            opacity: processingId === leave.id ? 0.5 : 1
+                          }}
+                        >
+                          <XCircle size={18} /> Tolak
+                        </button>
+                        <button 
+                          onClick={() => triggerConfirm(leave.id, 'approved', leave.profiles?.full_name)}
+                          disabled={processingId === leave.id}
+                          style={{ 
+                            padding: '0.75rem 1.25rem', borderRadius: '12px', border: 'none',
+                            background: 'var(--primary)', color: 'white', fontWeight: '800', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem',
+                            boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
+                            opacity: processingId === leave.id ? 0.5 : 1
+                          }}
+                        >
+                          {processingId === leave.id ? <div className="loader" style={{ width: '18px', height: '18px' }} /> : <CheckCircle size={18} />} Setujui
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '800',
+                        background: leave.status === 'approved' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                        color: leave.status === 'approved' ? 'var(--secondary)' : 'var(--error)',
+                        textTransform: 'uppercase'
+                      }}>
+                        {leave.status === 'approved' ? 'Disetujui' : 'Ditolak'}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
