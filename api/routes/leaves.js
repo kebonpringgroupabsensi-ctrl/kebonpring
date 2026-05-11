@@ -156,7 +156,7 @@ router.put('/:id/review', async (req, res) => {
           employee_id: leaveData.employee_id,
           branch_id: leaveData.profiles?.branch_id,
           date: dateStr,
-          status: leaveData.leave_type === 'sakit' ? 'sakit' : 'izin',
+          status: leaveData.leave_type === 'pulang_cepat' ? 'pulang_cepat' : (leaveData.leave_type === 'sakit' ? 'sakit' : 'izin'),
           notes: `${leaveData.leave_type}: ${leaveData.reason || '-'}`,
         });
       }

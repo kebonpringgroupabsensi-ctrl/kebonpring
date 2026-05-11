@@ -574,6 +574,7 @@ router.get('/summary', async (req, res) => {
           izin: 0,
           sakit: 0,
           alpa: 0,
+          pulang_cepat: 0,
           total_work_minutes: 0,
         };
       }
@@ -584,6 +585,7 @@ router.get('/summary', async (req, res) => {
       else if (att.status === 'izin') summary[empId].izin++;
       else if (att.status === 'sakit') summary[empId].sakit++;
       else if (att.status === 'alpa') summary[empId].alpa++;
+      else if (att.status === 'pulang_cepat') summary[empId].pulang_cepat++;
 
       // Check for specific lateness even if marked as 'hadir' or 'terlambat'
       const shift = att.shifts;
