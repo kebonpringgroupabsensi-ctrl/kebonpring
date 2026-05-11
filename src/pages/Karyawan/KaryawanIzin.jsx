@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, X, Calendar, FileText, CheckCircle, XCircle, Clock, Trash2, Camera, MapPin, Image as ImageIcon } from 'lucide-react';
 import { compressImage, fileToBase64 } from '../../utils/imageUtils';
 
@@ -11,6 +12,7 @@ const STATUS_MAP = {
 };
 
 export default function KaryawanIzin() {
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,6 +26,20 @@ export default function KaryawanIzin() {
   });
   const [locationLoading, setLocationLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  React.useEffect(() => {
+    const type = searchParams.get('type');
+    if (type === 'pulang_cepat') {
+      const today = new Date().toLocaleDateString('en-CA');
+      setFormData(prev => ({ 
+        ...prev, 
+        leave_type: 'pulang_cepat',
+        start_date: today,
+        end_date: today,
+        reason: 'Izin pulang cepat (sakit di tengah pekerjaan / keperluan mendadak)'
+      }));
+    }
+  }, [searchParams]);
 
   const { data: leaves, isLoading } = useQuery({
     queryKey: ['karyawan-leaves'],
@@ -188,6 +204,7 @@ export default function KaryawanIzin() {
                   <option value="izin">Izin</option>
                   <option value="sakit">Sakit</option>
                   <option value="cuti">Cuti</option>
+                  <option value="pulang_cepat">Pulang Cepat</option>
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

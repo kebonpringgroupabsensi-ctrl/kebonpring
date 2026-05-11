@@ -303,6 +303,7 @@ export default function SALaporan() {
                       <th style={{ textAlign: 'center' }}>Cepat Pulang</th>
                       <th style={{ textAlign: 'center' }}>Izin</th>
                       <th style={{ textAlign: 'center' }}>Sakit</th>
+                      <th style={{ textAlign: 'center' }}>Plg Cepat</th>
                       <th style={{ textAlign: 'center' }}>Alfa</th>
                       <th style={{ textAlign: 'center' }}>Jam Kerja</th>
                     </tr>
@@ -333,6 +334,7 @@ export default function SALaporan() {
                           </td>
                           <td style={{ textAlign: 'center' }}>{row.izin || 0}</td>
                           <td style={{ textAlign: 'center' }}>{row.sakit || 0}</td>
+                          <td style={{ textAlign: 'center' }}>{row.pulang_cepat || 0}</td>
                           <td style={{ textAlign: 'center' }}>
                             <span style={{ fontWeight: '700', color: row.alpa > 0 ? 'var(--error)' : 'var(--text-muted)' }}>{row.alpa || 0}</span>
                           </td>
@@ -569,10 +571,14 @@ export default function SALaporan() {
                         <td>
                           <span style={{ 
                             padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700',
-                            background: att.status === 'hadir' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                            color: att.status === 'hadir' ? 'var(--secondary)' : '#f59e0b'
+                            background: att.status === 'hadir' ? 'rgba(16,185,129,0.1)' : 
+                                        att.status === 'pulang_cepat' ? 'rgba(245,158,11,0.1)' :
+                                        att.status === 'terlambat' ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)',
+                            color: att.status === 'hadir' ? 'var(--secondary)' : 
+                                   att.status === 'pulang_cepat' ? '#f59e0b' :
+                                   att.status === 'terlambat' ? '#f59e0b' : '#3b82f6'
                           }}>
-                            {att.status}
+                            {att.status.replace('_', ' ')}
                           </span>
                         </td>
                         <td>

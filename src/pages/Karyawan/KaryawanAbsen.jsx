@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api, getUser } from '../../services/api';
-import { Camera, CheckCircle, XCircle, MapPin, ScanFace, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, MapPin, ScanFace, Clock, AlertCircle, RefreshCw, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { compressImage } from '../../utils/imageUtils';
 import FaceRegisterModal from '../../components/FaceRegisterModal';
 import { loadFaceModels, extractFaceDescriptor, isMatch } from '../../services/faceService';
@@ -11,9 +12,11 @@ const STATUS_LABELS = {
   izin: { label: 'Izin', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   sakit: { label: 'Sakit', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
   alpa: { label: 'Alpa', color: 'var(--error)', bg: 'rgba(239,68,68,0.1)' },
+  pulang_cepat: { label: 'Pulang Cepat', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
 };
 
 export default function KaryawanAbsen() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(getUser());
   const [attendance, setAttendance] = useState(null);
   const [shift, setShift] = useState(null);
@@ -307,6 +310,20 @@ export default function KaryawanAbsen() {
               }}
             >
               {actionLoading && pendingAction === 'check_out' ? <div className="loader" style={{ width: '20px', height: '20px', borderColor: '#fff' }} /> : <><ScanFace size={22} /> Check Out</>}
+            </button>
+
+            {/* Izin Pulang Cepat */}
+            <button
+              onClick={() => navigate('/karyawan/izin?type=pulang_cepat')}
+              disabled={actionLoading}
+              style={{
+                background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '14px',
+                padding: '1rem', fontSize: '0.95rem', fontWeight: '800', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+                opacity: actionLoading ? 0.7 : 1,
+              }}
+            >
+              <LogOut size={20} /> Izin Pulang Cepat (Sakit/Emergency)
             </button>
           </>
         )}
