@@ -212,6 +212,20 @@ export default function KaryawanIzin() {
                   />
                 </div>
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Alasan</label>
+                <textarea 
+                  className="form-input" 
+                  rows="3"
+                  placeholder="Berikan alasan pengajuan Anda..."
+                  required
+                  value={formData.reason}
+                  onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                  style={{ resize: 'none', padding: '0.75rem' }}
+                />
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Bukti Foto / Surat (Opsional)</label>
                 <div style={{ position: 'relative' }}>
