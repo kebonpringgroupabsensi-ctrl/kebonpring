@@ -39,7 +39,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
  */
 router.get('/', async (req, res) => {
   try {
-    const { date, month, year, employee_id, branch_id, status } = req.query;
+    const { date, month, year, employee_id, branch_id, status, startDate: qStartDate, endDate: qEndDate } = req.query;
     const userRole = req.user.profile.role;
 
     let query = supabaseAdmin
@@ -61,6 +61,8 @@ router.get('/', async (req, res) => {
 
     if (date) {
       query = query.eq('date', date);
+    } else if (qStartDate && qEndDate) {
+      query = query.gte('date', qStartDate).lte('date', qEndDate);
     } else if (month !== undefined && year) {
       const startDate = `${year}-${String(Number(month) + 1).padStart(2, '0')}-01`;
       const endMonth = Number(month) + 2;
@@ -528,23 +530,35 @@ router.get('/summary', async (req, res) => {
   try {
     authorizeRole(req.user, 'admin_cabang', 'super_admin');
 
-    const { month, year, branch_id } = req.query;
+    const { month, year, branch_id, startDate: qStartDate, endDate: qEndDate } = req.query;
     const userRole = req.user.profile.role;
 
-    const targetMonth = month !== undefined ? Number(month) : new Date().getMonth();
-    const targetYear = year || new Date().getFullYear();
+    let startDate, endDate;
 
-    const startDate = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
-    const endMonth = targetMonth + 2;
-    const endYear = endMonth > 12 ? Number(targetYear) + 1 : targetYear;
-    const endMonthStr = endMonth > 12 ? '01' : String(endMonth).padStart(2, '0');
-    const endDate = `${endYear}-${endMonthStr}-01`;
+    if (qStartDate && qEndDate) {
+      startDate = qStartDate;
+      endDate = qEndDate;
+    } else {
+      const targetMonth = month !== undefined ? Number(month) : new Date().getMonth();
+      const targetYear = year || new Date().getFullYear();
+
+      startDate = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
+      const endMonth = targetMonth + 2;
+      const endYear = endMonth > 12 ? Number(targetYear) + 1 : targetYear;
+      const endMonthStr = endMonth > 12 ? '01' : String(endMonth).padStart(2, '0');
+      endDate = `${endYear}-${endMonthStr}-01`;
+    }
 
     let query = supabaseAdmin
       .from('attendances')
       .select('*, profiles!attendances_employee_id_fkey(full_name, nik, position, branch_id, branches(name)), shifts(*)')
-      .gte('date', startDate)
-      .lt('date', endDate);
+      .gte('date', startDate);
+    
+    if (qStartDate && qEndDate) {
+      query = query.lte('date', endDate);
+    } else {
+      query = query.lt('date', endDate);
+    }
 
     if (userRole === 'admin_cabang') {
       query = query.eq('branch_id', req.user.profile.branch_id);

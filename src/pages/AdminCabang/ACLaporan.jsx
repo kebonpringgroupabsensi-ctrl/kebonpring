@@ -9,8 +9,14 @@ export default function ACLaporan() {
   const [reportData, setReportData] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filterMonth, setFilterMonth] = useState(new Date().getMonth());
-  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  
+  // Initialize date range with current month
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toLocaleDateString('en-CA');
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toLocaleDateString('en-CA');
+  
+  const [filterStartDate, setFilterStartDate] = useState(firstDay);
+  const [filterEndDate, setFilterEndDate] = useState(lastDay);
   const [leaveStatusTab, setLeaveStatusTab] = useState('pending');
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState(null);
@@ -30,12 +36,12 @@ export default function ACLaporan() {
     if (activeTab === 'report') fetchReport();
     else if (activeTab === 'leave_approval') fetchLeaveRequests(leaveStatusTab);
     else if (activeTab === 'log') fetchAttendanceLog();
-  }, [activeTab, filterMonth, filterYear, leaveStatusTab]);
+  }, [activeTab, filterStartDate, filterEndDate, leaveStatusTab]);
 
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const params = { month: filterMonth, year: filterYear };
+      const params = { startDate: filterStartDate, endDate: filterEndDate };
       const result = await api.get('/attendances/summary', params);
       setReportData(result);
     } catch (err) {
@@ -60,7 +66,7 @@ export default function ACLaporan() {
   const fetchAttendanceLog = async () => {
     setLoading(true);
     try {
-      const params = { month: filterMonth, year: filterYear };
+      const params = { startDate: filterStartDate, endDate: filterEndDate };
       const result = await api.get('/attendances', params);
       setAttendanceLog(result);
     } catch (err) {
@@ -96,7 +102,7 @@ export default function ACLaporan() {
     try {
       const XLSX = await import('xlsx');
       const ws_data = [
-        ['Laporan Absensi Cabang - ' + MONTHS_ID[filterMonth] + ' ' + filterYear],
+        ['Laporan Absensi Cabang - Periode: ' + filterStartDate + ' s/d ' + filterEndDate],
         [],
         ['No', 'Nama Karyawan', 'NIK', 'Hadir', 'Telat Kerja', 'Telat Istirahat', 'Cepat Pulang', 'Izin', 'Sakit', 'Alfa', 'Total Jam Kerja'],
         ...reportFiltered.map((row, i) => [
@@ -116,7 +122,7 @@ export default function ACLaporan() {
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Laporan Absensi');
-      XLSX.writeFile(wb, `Laporan_Cabang_${MONTHS_ID[filterMonth]}_${filterYear}.xlsx`);
+      XLSX.writeFile(wb, `Laporan_Cabang_${filterStartDate}_${filterEndDate}.xlsx`);
     } catch (err) {
       alert('Gagal export: ' + err.message);
     }
@@ -224,13 +230,13 @@ export default function ACLaporan() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-            <select className="form-input" style={{ width: '140px' }} value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))}>
-              {MONTHS_ID.map((m, i) => <option key={i} value={i}>{m}</option>)}
-            </select>
-            <select className="form-input" style={{ width: '100px' }} value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))}>
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Periode:</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>s/d</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+            </div>
             <div style={{ flex: 1, minWidth: '180px', position: 'relative' }}>
               <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input type="text" placeholder="Cari karyawan..." className="form-input" style={{ paddingLeft: '2.5rem' }} value={search} onChange={e => setSearch(e.target.value)} />
@@ -427,13 +433,13 @@ export default function ACLaporan() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-            <select className="form-input" style={{ width: '140px' }} value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))}>
-              {MONTHS_ID.map((m, i) => <option key={i} value={i}>{m}</option>)}
-            </select>
-            <select className="form-input" style={{ width: '100px' }} value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))}>
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Periode:</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>s/d</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+            </div>
             <div style={{ flex: 1, minWidth: '180px', position: 'relative' }}>
               <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input type="text" placeholder="Cari nama..." className="form-input" style={{ paddingLeft: '2.5rem' }} value={search} onChange={e => setSearch(e.target.value)} />

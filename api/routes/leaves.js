@@ -158,6 +158,9 @@ router.put('/:id/review', async (req, res) => {
           date: dateStr,
           status: leaveData.leave_type === 'pulang_cepat' ? 'pulang_cepat' : (leaveData.leave_type === 'sakit' ? 'sakit' : 'izin'),
           notes: `${leaveData.leave_type}: ${leaveData.reason || '-'}`,
+          check_in_latitude: leaveData.latitude,
+          check_in_longitude: leaveData.longitude,
+          check_in_photo_url: leaveData.attachment_url,
         });
       }
 

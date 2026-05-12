@@ -10,8 +10,14 @@ export default function SALaporan() {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filterMonth, setFilterMonth] = useState(new Date().getMonth());
-  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+
+  // Initialize date range with current month
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toLocaleDateString('en-CA');
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toLocaleDateString('en-CA');
+
+  const [filterStartDate, setFilterStartDate] = useState(firstDay);
+  const [filterEndDate, setFilterEndDate] = useState(lastDay);
   const [filterBranch, setFilterBranch] = useState('');
   const [leaveStatusTab, setLeaveStatusTab] = useState('pending');
   const [search, setSearch] = useState('');
@@ -36,12 +42,12 @@ export default function SALaporan() {
     if (activeTab === 'report') fetchReport();
     else if (activeTab === 'leave_approval') fetchLeaveRequests(leaveStatusTab);
     else if (activeTab === 'log') fetchAttendanceLog();
-  }, [activeTab, filterMonth, filterYear, filterBranch, leaveStatusTab]);
+  }, [activeTab, filterStartDate, filterEndDate, filterBranch, leaveStatusTab]);
 
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const params = { month: filterMonth, year: filterYear };
+      const params = { startDate: filterStartDate, endDate: filterEndDate };
       if (filterBranch) params.branch_id = filterBranch;
       const result = await api.get('/attendances/summary', params);
       setReportData(result);
@@ -67,7 +73,7 @@ export default function SALaporan() {
   const fetchAttendanceLog = async () => {
     setLoading(true);
     try {
-      const params = { month: filterMonth, year: filterYear };
+      const params = { startDate: filterStartDate, endDate: filterEndDate };
       if (filterBranch) params.branch_id = filterBranch;
       const result = await api.get('/attendances', params);
       setAttendanceLog(result);
@@ -104,7 +110,7 @@ export default function SALaporan() {
     try {
       const XLSX = await import('xlsx');
       const ws_data = [
-        ['Laporan Absensi - ' + MONTHS_ID[filterMonth] + ' ' + filterYear],
+        ['Laporan Absensi - Periode: ' + filterStartDate + ' s/d ' + filterEndDate],
         [],
         ['No', 'Nama Karyawan', 'NIK', 'Jabatan', 'Cabang', 'Hadir', 'Telat Kerja', 'Telat Istirahat', 'Cepat Pulang', 'Izin', 'Sakit', 'Alfa', 'Total Jam Kerja'],
         ...reportFiltered.map((row, i) => [
@@ -126,7 +132,7 @@ export default function SALaporan() {
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Laporan Absensi');
-      XLSX.writeFile(wb, `Laporan_Absensi_${MONTHS_ID[filterMonth]}_${filterYear}.xlsx`);
+      XLSX.writeFile(wb, `Laporan_Absensi_${filterStartDate}_${filterEndDate}.xlsx`);
     } catch (err) {
       alert('Gagal export: ' + err.message);
     }
@@ -270,13 +276,13 @@ export default function SALaporan() {
             </div>
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              <select className="form-input" style={{ width: '140px' }} value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))}>
-                {MONTHS_ID.map((m, i) => <option key={i} value={i}>{m}</option>)}
-              </select>
-              <select className="form-input" style={{ width: '100px' }} value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))}>
-                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Periode:</span>
+                <input type="date" className="form-input" style={{ width: '150px' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>s/d</span>
+                <input type="date" className="form-input" style={{ width: '150px' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+              </div>
               <select className="form-input" style={{ width: '160px' }} value={filterBranch} onChange={e => setFilterBranch(e.target.value)}>
                 <option value="">Semua Cabang</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -525,13 +531,13 @@ export default function SALaporan() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-            <select className="form-input" style={{ width: '140px' }} value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))}>
-              {MONTHS_ID.map((m, i) => <option key={i} value={i}>{m}</option>)}
-            </select>
-            <select className="form-input" style={{ width: '100px' }} value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))}>
-              {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Periode:</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>s/d</span>
+              <input type="date" className="form-input" style={{ width: '150px' }} value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)} />
+            </div>
             <select className="form-input" style={{ width: '160px' }} value={filterBranch} onChange={e => setFilterBranch(e.target.value)}>
               <option value="">Semua Cabang</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
