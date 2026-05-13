@@ -88,6 +88,24 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Tanggal selesai harus setelah tanggal mulai.' });
     }
 
+    // NEW: Limit to 1 request per day
+    const today = new Date();
+    const todayStart = new Date(today.setHours(0,0,0,0)).toISOString();
+    const todayEnd = new Date(today.setHours(23,59,59,999)).toISOString();
+
+    const { data: existingRequest, error: checkError } = await supabaseAdmin
+      .from('leave_requests')
+      .select('id')
+      .eq('employee_id', req.user.profile.id)
+      .gte('created_at', todayStart)
+      .lte('created_at', todayEnd)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+    if (existingRequest) {
+      return res.status(400).json({ error: 'Anda sudah membuat pengajuan izin hari ini. Maksimal 1 pengajuan per hari.' });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('leave_requests')
       .insert({
