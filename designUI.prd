@@ -1,0 +1,537 @@
+DESIGN UI DOCUMENTATION - AbsenKu Green Theme Application
+===========================================
+APLIKASI ABSENSI KARYAWAN
+Green Theme - Modern Dashboard
+===========================================
+
+1. WARNA PALETTE
+Warna hijau yang dipilih: Emerald-Teal Fusion — terkesan profesional, modern, dan segar. Bukan hijau stabilo, tapi hijau gelap elegan dengan aksen teal.
+Primary Colors (Green Theme)
+NameHex CodeUsagePrimary#10B981Main accent, buttons, highlightsPrimary Light#34D399Hover states, secondary accentsPrimary Dark#059669Sidebar gradient top, darker elementsSecondary#047857Text accents
+Background Colors
+NameHex CodeUsageBackground App#F0FDF9Main background (light mode)Background App Dark#022C22Main background (dark mode)Surface#FFFFFFCards, panels (light mode)Surface Dark#064E3BCards, panels (dark mode)Border Color#D1FAE5Borders, dividers (light)Border Color Dark#065F46Borders (dark mode)
+Text Colors
+NameHex CodeUsageText Primary#1F2937Main text (light mode)Text Primary Dark#ECFDF5Main text (dark mode)Text Secondary#6B7280Subdued text (light)Text Secondary Dark#6EE7B7Subdued text (dark)Text Muted#9CA3AFPlaceholder, hints (light)Text Muted Dark#047857Placeholder (dark)
+Status Colors
+NameHex CodeUsageSuccess#10B981Success states, online indicatorsDanger#EF4444Error states, delete buttonsWarning#F59E0BWarning statesInfo#3B82F6Info states
+
+2. TYPOGRAPHY (Font)
+Font Family
+
+Primary Font: Quicksand (Google Fonts)
+Fallback: sans-serif
+Weights: 300, 400, 500, 600, 700
+
+Import URL
+https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap
+Font Usage by Element
+ElementSizeWeightLine HeightLetter SpacingH1 (Page Title)2rem (32px)8001.1-0.02emH2 (Section Title)1.5rem (24px)8001.2tightH3 (Card Title)1.25rem (20px)7001.3normalBody Text0.875rem (14px)5001.5normalSmall Text0.75rem (12px)6001.4normalLabel0.875rem (14px)600normalnormalCaption/Meta0.625rem (10px)700normal0.1em
+Sidebar Navigation Text
+
+Font Weight: 500 (semibold)
+Font Size: 0.875rem (14px)
+Color: rgba(255, 255, 255, 0.7) → white on hover
+Active State: white full opacity
+Effect: text-white font-semibold
+
+
+3. BORDER RADIUS
+NameValueUsageradius-sm8pxSmall buttons, badgesradius-md10pxInputs, small cardsradius-lg16pxCards, modalsradius-xl24pxLarge cards, login card
+
+4. SHADOWS
+Light Mode Shadows
+--shadow-sm: 0 1px 2px 0 rgb(16 185 129 / 0.05);
+--shadow-md: 0 4px 6px -1px rgb(16 185 129 / 0.1), 0 2px 4px -2px rgb(16 185 129 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(16 185 129 / 0.1), 0 4px 6px -4px rgb(16 185 129 / 0.1);
+--shadow-xl: 0 20px 25px -5px rgb(16 185 129 / 0.1), 0 8px 10px -6px rgb(16 185 129 / 0.1);
+Dark Mode Shadows
+--shadow-sm: 0 1px 2px 0 rgb(16 185 129 / 0.2);
+--shadow-md: 0 4px 6px -1px rgb(16 185 129 / 0.3), 0 2px 4px -2px rgb(16 185 129 / 0.3);
+--shadow-lg: 0 10px 15px -3px rgb(16 185 129 / 0.4), 0 4px 6px -4px rgb(16 185 129 / 0.4);
+--shadow-xl: 0 20px 25px -5px rgb(16 185 129 / 0.5), 0 8px 10px -6px rgb(16 185 129 / 0.5);
+
+5. BUTTONS
+Primary Button
+css.btn-primary {
+  background-color: var(--primary); /* #10B981 */
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md); /* 10px */
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.25s ease;
+}
+.btn-primary:hover {
+  background-color: var(--primary-light); /* #34D399 */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+Ghost Button
+css.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover {
+  background-color: var(--primary-soft); /* rgba(16, 185, 129, 0.1) */
+  color: var(--primary);
+}
+
+6. INPUT FIELDS
+Standard Input
+css.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color); /* #D1FAE5 */
+  border-radius: var(--radius-md); /* 10px */
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: all 0.25s ease;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--primary); /* #10B981 */
+  box-shadow: 0 0 0 4px var(--primary-soft); /* rgba(16, 185, 129, 0.1) */
+}
+
+7. LOGIN PAGE DESIGN
+Layout: Centered Single Card
+
+Background: Animated gradient with floating blobs
+Card Position: Centered vertically and horizontally
+Card Style: Glassmorphism (backdrop-filter blur)
+
+Login Card Specifications
+Width: max-width 480px
+Padding: 3rem
+Border Radius: 24px
+Background: rgba(255, 255, 255, 0.95)
+Shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25)
+Backdrop Blur: 20px
+Animated Background
+1. Gradient Animation
+   - Colors: #10b981, #047857, #34d399, #059669, #022c22
+   - Animation: 15s ease infinite
+   - Movement: 400% 400% background-size
+
+2. Floating Blobs (4 blobs)
+   - Blob 1: 400x400px, #10b981, top:-100px, left:-100px
+   - Blob 2: 300x300px, #34d399, bottom:-50px, right:-50px
+   - Blob 3: 200x200px, #047857, top:50%, left:30%
+   - Blob 4: 250x250px, #022c22, top:20%, right:20%
+   - All blobs: filter blur(80px), opacity 0.4
+   - Animation: blobFloat 20s ease-in-out infinite
+
+3. Grid Overlay
+   - Background: linear-gradient lines (50px x 50px)
+   - Color: rgba(255,255,255,0.03)
+Logo Section
+Container: 100px x 100px, centered
+Icon Box: 40px x 40px, 15px inset, border-radius 20px
+Background: linear-gradient(135deg, #10b981 0%, #047857 100%)
+Shadow: 0 10px 30px rgba(16, 185, 129, 0.4)
+SVG Icon: 40px x 40px, white stroke
+
+Animations:
+- .logo-ring: border 3px #10b981, border-radius 24px, pulse 3s
+- .logo-pulse: border 2px rgba(16, 185, 129, 0.3), border-radius 32px, scale pulse
+
+Title (App Name):
+- Font: Quicksand, 1.75rem, weight 800
+- Background: linear-gradient(135deg, #10b981 0%, #047857 100%)
+- -webkit-background-clip: text
+- -webkit-text-fill-color: transparent
+
+Tagline:
+- Font: Quicksand, 0.875rem, weight 500
+- Color: #6b7280 (gray)
+Login Form
+Input Modern:
+- Padding: 1rem 1rem 1rem 3rem (left for icon)
+- Border: 2px solid #f3f4f6
+- Border Radius: 12px
+- Focus: border-color #10b981, box-shadow 0 0 0 4px rgba(16, 185, 129, 0.15)
+- Icon: 20px x 20px, position absolute left 1rem
+
+Login Button:
+- Width: 100%
+- Padding: 1rem 2rem
+- Background: linear-gradient(135deg, #10b981 0%, #047857 100%)
+- Border Radius: 12px
+- Font: Quicksand, 1rem, weight 700, white
+- Shadow: 0 10px 30px rgba(16, 185, 129, 0.35)
+- Hover: transform translateY(-2px), shadow 0 15px 40px rgba(16, 185, 129, 0.45)
+Quick Access Buttons
+Container: flex, gap 0.75rem, margin-bottom 1.5rem
+
+Button Style:
+- Padding: 0.75rem 1rem
+- Background: #f0fdf9
+- Border: 2px solid #d1fae5
+- Border Radius: 10px
+- Color: #047857
+- Font: Quicksand, 0.8rem, weight 700
+- Icon: 24px x 24px
+- Hover: background #10b981, color white, transform translateY(-2px)
+
+8. SIDEBAR DESIGN
+Sidebar Container
+Width: 280px (expanded), 80px (collapsed)
+Background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%)
+   Light: #059669 → #10B981
+   Dark: #064E3B → #065F46
+Color: white
+Position: fixed left
+Z-Index: 50
+Shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.1)
+Sidebar Header
+Padding: 2rem (p-8)
+Border Bottom: 1px solid rgba(255,255,255,0.05)
+Flex: items-center, justify-between, gap 1rem
+
+Logo Box:
+- Width/Height: 48px x 48px
+- Background: rgba(255,255,255,0.1)
+- Border Radius: 12px
+- Backdrop Blur: present
+- Font: Quicksand, 1.25rem, weight 800, italic
+- Color: #6EE7B7 (text-emerald-200)
+
+App Name:
+- Font: Quicksand, 1rem, weight 800
+- Color: white + accent color #6EE7B7
+Navigation Menu Item (Sidebar Link)
+css.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-left: 4px solid transparent;
+  transition: all 0.25s ease;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+.sidebar-link.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-left-color: #ECFDF5;
+}
+Text Color - BRIGHT WHITE VISIBILITY
+Default: rgba(255, 255, 255, 0.7)
+Hover: white
+Active: white
+
+class="sidebar-text text-white font-semibold"
+
+9. NAVBAR / HEADER
+Header Container
+Height: 80px (h-20)
+Background: var(--surface)
+Border Bottom: 1px solid var(--border-color)
+Padding: 0 1rem-2rem
+Position: sticky, top-0
+Z-Index: 40
+Toggle Sidebar Buttons
+cssButton Style:
+- Padding: 0.625rem
+- Background: #f0fdf9 (light), #064e3b (dark)
+- Border Radius: 10px
+- Hover: bg-emerald-50, text-emerald-600
+- Icon Size: 24px x 24px
+Notification Bell
+Button: p-2.5, bg-slate-50 dark:bg-slate-800
+Badge: absolute -top-1.5 -right-1.5, 20px x 20px
+Background: #ef4444
+Color: white
+Font: 10px, weight 900
+Border: 2px solid white
+
+10. CARDS
+Card Component
+css.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg); /* 16px */
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.25s ease;
+  color: var(--text-primary);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+Card Padding
+
+Standard: 1.5rem (p-6)
+Large Cards: 2rem (p-8)
+Compact: 1rem (p-4)
+
+
+11. CHAT COMPONENT
+Chat Background Colors
+ModeBackgroundColor CodeLight Mode#e8e8e8Light grayDark Mode#0d1f1aDark green-navy
+Chat Bubbles - My Messages
+cssBackground: linear-gradient(135deg, #10b981 0%, #047857 100%)
+Color: white
+Border Radius: 16px
+Font: 0.875rem, font-medium
+Shadow: 0 10px 30px rgba(16, 185, 129, 0.35)
+Chat Bubbles - Their Messages
+cssLight Mode:
+- Background: white
+- Color: #1f2937
+- Border Radius: 16px
+
+Dark Mode:
+- Background: #1e293b
+- Color: #f1f5f9
+Chat Input
+cssContainer: bg-gray-100 dark:bg-slate-700, padding 0.5rem, rounded-2xl
+Input: bg-transparent, border-none, flex-1
+Send Button: 40px x 40px, bg-emerald-600, white, rounded-full
+
+12. SCROLLBAR
+Custom Scrollbar CSS
+css::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #6EE7B7; /* Light emerald */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10B981; /* Main green */
+}
+
+/* Dark Mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: #6B7280;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Custom class for chat areas */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #A7F3D0;
+}
+
+13. ANIMATIONS
+Fade In
+css@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+Pop In (Login Card)
+css@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  50% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+Bounce In (Notification Badge)
+css@keyframes bounce-in {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+Spin (Loading)
+css@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+Sidebar Toggle
+css.sidebar-collapsed #sidebar {
+  width: 80px;
+}
+.sidebar-collapsed .sidebar-text {
+  display: none;
+}
+
+14. DARK MODE
+CSS Variables Override
+css.dark {
+  --bg-app: #022C22;
+  --surface: #064E3B;
+  --bg-card: #064E3B;
+  --text-primary: #ECFDF5;
+  --text-secondary: #6EE7B7;
+  --text-muted: #047857;
+  --border-color: #065F46;
+}
+Implementation
+javascriptfunction toggleDarkMode() {
+  isDarkMode = !isDarkMode;
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }
+  renderCurrentPage();
+}
+Early Theme Detection (in Head)
+html<script>
+  (function() {
+    const theme = localStorage.getItem('theme') || 'light';
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
+
+15. RESPONSIVE BREAKPOINTS
+BreakpointWidthUsageMobile< 640pxsm: prefixTablet640px - 1024pxmd: prefixDesktop> 1024pxlg: prefix
+Key Responsive Settings
+
+Sidebar: Hidden on mobile, toggle button shows
+Chat: Full width on mobile, split on desktop
+Login card: Full width mobile, centered on desktop
+Text sizes: Smaller on mobile
+
+
+16. BADGES & INDICATORS
+Notification Badge
+css.notif-badge-icon {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  background: #34D399;
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  border-radius: 9999px;
+  border: 2px solid var(--surface);
+  box-shadow: 0 4px 10px rgba(52, 211, 153, 0.4);
+}
+Unread Badge (Chat List)
+cssBackground: #ef4444
+Color: white
+Font: 10px, weight 900
+Border Radius: 9999px
+Online Indicator
+cssColor: #10b981
+Size: 8px x 8px
+Border Radius: 50%
+
+17. INPUT ICONS (Login Page)
+Icon Positioning
+Position: absolute
+Left: 1rem (16px)
+Top: 50%, transform translateY(-50%)
+Size: 20px x 20px
+Color: #9ca3af (gray-400)
+Focus State: color changes to #10b981 (green)
+
+18. GRADIENT UTILITIES
+Button Gradients
+cssbackground: linear-gradient(135deg, #10b981 0%, #059669 100%)
+Text Gradients
+css/* Login Title */
+background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+Sidebar Gradient
+cssbackground: linear-gradient(180deg, #059669 0%, #10B981 100%);
+/* Dark: linear-gradient(180deg, #064E3B 0%, #065F46 100%) */
+
+19. TAILWIND CONFIG
+javascripttailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        app: '#F0FDF9',
+        surface: '#FFFFFF',
+        primary: '#10B981',
+        'primary-light': '#34D399',
+        'primary-dark': '#059669',
+        secondary: '#047857'
+      }
+    }
+  }
+}
+
+20. SWEETALERT2 CUSTOMIZATION
+css.swal2-popup {
+  border-radius: 16px !important;
+  font-family: 'Quicksand', sans-serif !important;
+}
+.dark .swal2-popup {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+}
+
+QUICK REFERENCE — COPY PASTE READY
+CSS Variables Setup
+css:root {
+  --primary: #10B981;
+  --primary-light: #34D399;
+  --primary-dark: #059669;
+  --primary-soft: rgba(16, 185, 129, 0.1);
+  --bg-app: #F0FDF9;
+  --surface: #FFFFFF;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border-color: #D1FAE5;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+.dark {
+  --bg-app: #022C22;
+  --surface: #064E3B;
+  --text-primary: #ECFDF5;
+  --text-secondary: #6EE7B7;
+  --text-muted: #047857;
+  --border-color: #065F46;
+}
+Font Import
+html<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+Common Classes
+html<!-- Buttons -->
+<button class="btn btn-primary">Primary</button>
+<button class="btn btn-ghost">Ghost</button>
+
+<!-- Cards -->
+<div class="card p-6">Content</div>
+
+<!-- Inputs -->
+<input type="text" class="input" placeholder="Text...">
+
+<!-- Sidebar Link -->
+<button class="sidebar-link active">
+  <svg class="w-5 h-5">Icon</svg>
+  <span class="sidebar-text text-white font-semibold">Label</span>
+</button>
+
+COLOR SWAP REFERENCE (Pink → Green)
+Kalau ketemu kode warna lama di tempat lain, ini padanannya:
+Pink (Lama)Green (Baru)Token#EC4899#10B981primary#F472B6#34D399primary-light#DB2777#059669primary-dark#BE185D#047857secondary#FFF5F7#F0FDF9bg-app light#1F0920#022C22bg-app dark#2D1626#064E3Bsurface dark#FCE7F3#D1FAE5border light#4C1D3D#065F46border dark#F9A8D4#6EE7B7text-secondary dark#831843#022C22deepest darkrgba(236,72,153,...)rgba(16,185,129,...)semua shadow & soft
+
+END OF DOCUMENT — Green Emerald-Teal Theme

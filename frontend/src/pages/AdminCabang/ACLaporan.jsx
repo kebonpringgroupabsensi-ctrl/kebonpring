@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { FileText, Download, Search, Users, CheckCircle, XCircle, MessageSquare, Camera, MapPin, Image as ImageIcon, Eye } from 'lucide-react';
+import { FileText, Download, Search, Users, CheckCircle, XCircle, Calendar, MessageSquare, Camera, MapPin, Image as ImageIcon, Eye } from 'lucide-react';
 
 const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -26,11 +26,26 @@ export default function ACLaporan() {
   // Custom Modal State
   const [confirmModal, setConfirmModal] = useState({ show: false, id: null, status: null, name: '' });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [detailModal, setDetailModal] = useState({ show: false, type: '', title: '', data: [], loading: false });
 
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
   };
+
+  const openDetailModal = async (type, title) => {
+    setDetailModal({ show: true, type, title, data: [], loading: true });
+    try {
+      const params = { type, startDate: filterStartDate, endDate: filterEndDate };
+      const result = await api.get('/attendances/detail', params);
+      setDetailModal(prev => ({ ...prev, data: result || [], loading: false }));
+    } catch (err) {
+      console.error('Detail fetch error:', err);
+      setDetailModal(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const closeDetailModal = () => setDetailModal({ show: false, type: '', title: '', data: [], loading: false });
 
   useEffect(() => { 
     if (activeTab === 'report') fetchReport();
@@ -132,6 +147,14 @@ export default function ACLaporan() {
     !search || row.full_name?.toLowerCase().includes(search.toLowerCase()) || row.nik?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totals = reportFiltered.reduce((acc, row) => ({
+    hadir: acc.hadir + (row.hadir || 0),
+    terlambat_kerja: acc.terlambat_kerja + (row.terlambat_kerja || 0),
+    terlambat_istirahat: acc.terlambat_istirahat + (row.terlambat_istirahat || 0),
+    cepat_pulang: acc.cepat_pulang + (row.cepat_pulang || 0),
+    alpa: acc.alpa + (row.alpa || 0),
+  }), { hadir: 0, terlambat_kerja: 0, terlambat_istirahat: 0, cepat_pulang: 0, alpa: 0 });
+
   return (
     <>
       {/* Toast Notification */}
@@ -167,6 +190,74 @@ export default function ACLaporan() {
               >
                 Ya, Lanjutkan
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailModal.show && (
+        <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={closeDetailModal}>
+          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{detailModal.title}</h2>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{filterStartDate} s/d {filterEndDate}</p>
+              </div>
+              <button onClick={closeDetailModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}>
+                <XCircle size={22} />
+              </button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: '1rem 1.5rem' }}>
+              {detailModal.loading ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}><div className="loader" style={{ width: '30px', height: '30px', margin: '0 auto' }} /></div>
+              ) : detailModal.data.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Tidak ada data untuk periode ini.</div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid var(--surface-border)', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left' }}>No</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left' }}>Nama Karyawan</th>
+                      <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>Tanggal</th>
+                      {detailModal.type === 'terlambat_kerja' && <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>Menit Terlambat</th>}
+                      {detailModal.type === 'terlambat_istirahat' && <th style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>Durasi Istirahat</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailModal.data.map((row, i) => (
+                      <tr key={row.id || i} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                        <td style={{ padding: '0.65rem 0.75rem', color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ padding: '0.65rem 0.75rem' }}>
+                          <div style={{ fontWeight: '700' }}>{row.profiles?.full_name || '-'}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.profiles?.nik || ''}</div>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center', fontWeight: '600' }}>
+                          {new Date(row.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        {detailModal.type === 'terlambat_kerja' && (
+                          <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }}>
+                            <span style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700', fontSize: '0.8rem' }}>
+                              {row.late_minutes || 0} menit
+                            </span>
+                          </td>
+                        )}
+                        {detailModal.type === 'terlambat_istirahat' && (
+                          <td style={{ padding: '0.65rem 0.75rem', textAlign: 'center' }}>
+                            <span style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700', fontSize: '0.8rem' }}>
+                              {row.total_break_minutes || 0} menit
+                            </span>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total: <strong>{detailModal.data.length}</strong> kejadian</span>
+              <button className="btn-ghost" style={{ padding: '0.5rem 1.25rem' }} onClick={closeDetailModal}>Tutup</button>
             </div>
           </div>
         </div>
@@ -219,7 +310,42 @@ export default function ACLaporan() {
       )}
 
       {activeTab === 'report' ? (
-        <div className="content-card">
+        <>
+          {/* Summary Cards */}
+          <div className="stat-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+            <div className="stat-card" onClick={() => openDetailModal('hadir', 'Total Hadir')} style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+              <div className="stat-info"><h3>Total Hadir</h3><div className="value">{totals.hadir}</div></div>
+              <div className="stat-icon" style={{ color: 'var(--secondary)', background: 'rgba(16,185,129,0.1)' }}><Users size={22} /></div>
+            </div>
+            <div className="stat-card" onClick={() => openDetailModal('terlambat_kerja', 'Telat Kerja')} style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(245,158,11,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+              <div className="stat-info"><h3>Telat Kerja</h3><div className="value">{totals.terlambat_kerja}</div></div>
+              <div className="stat-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}><FileText size={22} /></div>
+            </div>
+            <div className="stat-card" onClick={() => openDetailModal('terlambat_istirahat', 'Telat Istirahat')} style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(99,102,241,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+              <div className="stat-info"><h3>Telat Istirahat</h3><div className="value">{totals.terlambat_istirahat}</div></div>
+              <div className="stat-icon" style={{ color: '#6366f1', background: 'rgba(99,102,241,0.1)' }}><Calendar size={22} /></div>
+            </div>
+            <div className="stat-card" onClick={() => openDetailModal('cepat_pulang', 'Cepat Pulang')} style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(239,68,68,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+              <div className="stat-info"><h3>Cepat Pulang</h3><div className="value">{totals.cepat_pulang}</div></div>
+              <div className="stat-icon" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }}><XCircle size={22} /></div>
+            </div>
+            <div className="stat-card" onClick={() => openDetailModal('alpa', 'Alfa')} style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(107,114,128,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
+              <div className="stat-info"><h3>Alfa</h3><div className="value">{totals.alpa}</div></div>
+              <div className="stat-icon" style={{ color: '#6b7280', background: 'rgba(107,114,128,0.1)' }}><CheckCircle size={22} /></div>
+            </div>
+          </div>
+
+          <div className="content-card">
           <div className="content-header">
             <div>
               <h2>Laporan Absensi Cabang</h2>
@@ -285,6 +411,7 @@ export default function ACLaporan() {
             </div>
           )}
         </div>
+        </>
       ) : activeTab === 'leave_approval' ? (
         <div className="content-card">
           <div className="content-header" style={{ marginBottom: '1rem' }}>
@@ -494,13 +621,15 @@ export default function ACLaporan() {
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{att.check_out_time ? (att.check_out_face_verified ? '✅ Wajah Terverifikasi' : '❌ Tanpa Verifikasi') : ''}</div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           {att.total_work_minutes ? `${Math.floor(att.total_work_minutes / 60)}j ${att.total_work_minutes % 60}m` : '-'}
+                          {att.is_early_leave && <span style={{ fontSize: '0.65rem', background: 'rgba(239,68,68,0.1)', color: 'var(--error)', padding: '0.1rem 0.3rem', borderRadius: '4px', fontWeight: '800' }}>PULANG CEPAT</span>}
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           {att.total_break_minutes ? `${Math.floor(att.total_break_minutes / 60)}j ${att.total_break_minutes % 60}m` : '-'}
+                          {att.is_break_late && <span style={{ fontSize: '0.65rem', background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '0.1rem 0.3rem', borderRadius: '4px', fontWeight: '800' }}>TELAT</span>}
                         </div>
                       </td>
                       <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
