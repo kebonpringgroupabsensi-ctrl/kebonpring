@@ -354,32 +354,17 @@ router.post('/break/end', async (req, res) => {
     const breakStart = new Date(attendance.start_break_time);
     const breakMinutes = Math.round((now - breakStart) / 60000);
 
-    // Get shift info for lateness check
-    const { data: assignment } = await supabaseAdmin
-      .from('shift_assignments')
-      .select('shifts(*)')
-      .eq('employee_id', req.user.profile.id)
-      .eq('date', today)
-      .maybeSingle();
-
-    let isLateBreak = false;
-    let lateBreakMinutes = 0;
-    if (assignment?.shifts?.break_end) {
-      const [h, m] = assignment.shifts.break_end.split(':').map(Number);
-      const nowWIB = getNowWIB();
-      const breakEndWIB = buildWIBTime(nowWIB, h, m);
-      if (nowWIB > breakEndWIB) {
-        isLateBreak = true;
-        lateBreakMinutes = Math.round((nowWIB - breakEndWIB) / 60000);
-      }
-    }
+    // Check if break is too long
+    const maxBreak = attendance.shifts?.max_break_minutes || 60;
+    const isBreakLate = breakMinutes > maxBreak;
 
     const { data, error } = await supabaseAdmin
       .from('attendances')
       .update({
         end_break_time: now.toISOString(),
         total_break_minutes: breakMinutes,
-        notes: isLateBreak ? `Terlambat habis istirahat ${lateBreakMinutes} menit` : attendance.notes
+        is_break_late: isBreakLate,
+        notes: isBreakLate ? `Terlambat habis istirahat ${breakMinutes - maxBreak} menit` : attendance.notes
       })
       .eq('id', attendance.id)
       .select()
@@ -461,8 +446,6 @@ router.post('/check-out', async (req, res) => {
       const winStart = new Date(shiftEnd.getTime() - (beforeHours * 60 * 60 * 1000));
       const winEnd = new Date(shiftEnd.getTime() + (afterHours * 60 * 60 * 1000));
 
-      console.log(`[CHECK-OUT DEBUG] nowWIB=${formatWIBTime(nowWIB)}, shiftEnd=${formatWIBTime(shiftEnd)}, winStart=${formatWIBTime(winStart)}, winEnd=${formatWIBTime(winEnd)}`);
-
       if (nowWIB < winStart) {
         return res.status(400).json({ 
           error: `Belum waktunya absen pulang. Absen dibuka mulai pukul ${formatWIBTime(winStart)}` 
@@ -499,6 +482,7 @@ router.post('/check-out', async (req, res) => {
         check_out_face_verified: face_verified || false,
         check_out_photo_url: photoUrl,
         total_work_minutes: totalWorkMinutes,
+        is_early_leave: isEarlyLeave,
         notes: isEarlyLeave ? `Pulang lebih awal ${earlyLeaveMinutes} menit` : attendance.notes
       })
       .eq('id', attendance.id)
@@ -601,29 +585,9 @@ router.get('/summary', async (req, res) => {
       else if (att.status === 'alpa') summary[empId].alpa++;
       else if (att.status === 'pulang_cepat') summary[empId].pulang_cepat++;
 
-      // Check for specific lateness even if marked as 'hadir' or 'terlambat'
-      const shift = att.shifts;
-      if (shift && att.status !== 'izin' && att.status !== 'sakit' && att.status !== 'alpa') {
-        // Late after break
-        if (att.end_break_time && shift.break_end) {
-          const [h, m] = shift.break_end.split(':').map(Number);
-          const breakEnd = new Date(att.end_break_time);
-          breakEnd.setHours(h, m, 0, 0);
-          if (new Date(att.end_break_time) > breakEnd) {
-            summary[empId].terlambat_istirahat++;
-          }
-        }
-        
-        // Early Leave
-        if (att.check_out_time && shift.end_time) {
-          const [h, m] = shift.end_time.split(':').map(Number);
-          const endTime = new Date(att.check_out_time);
-          endTime.setHours(h, m, 0, 0);
-          if (new Date(att.check_out_time) < endTime) {
-            summary[empId].cepat_pulang++;
-          }
-        }
-      }
+      // Specific violation flags (using the columns we added)
+      if (att.is_break_late) summary[empId].terlambat_istirahat++;
+      if (att.is_early_leave) summary[empId].cepat_pulang++;
 
       summary[empId].total_work_minutes += att.total_work_minutes || 0;
     });
@@ -632,6 +596,46 @@ router.get('/summary', async (req, res) => {
   } catch (err) {
     console.error('Summary error:', err);
     return res.status(err.statusCode || 500).json({ error: err.message || 'Gagal memuat ringkasan absensi.' });
+  }
+});
+
+/**
+ * GET /api/attendances/detail
+ * Get detailed attendance records for a specific violation type
+ */
+router.get('/detail', async (req, res) => {
+  try {
+    authorizeRole(req.user, 'admin_cabang', 'super_admin');
+    const { type, startDate, endDate, branch_id } = req.query;
+    const userRole = req.user.profile.role;
+
+    let query = supabaseAdmin
+      .from('attendances')
+      .select('*, profiles!attendances_employee_id_fkey(full_name, nik, branch_id, branches(name))')
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false });
+
+    // Filter based on type
+    if (type === 'terlambat_kerja') query = query.eq('is_late', true);
+    else if (type === 'terlambat_istirahat') query = query.eq('is_break_late', true);
+    else if (type === 'cepat_pulang') query = query.eq('is_early_leave', true);
+    else if (type === 'alpa') query = query.eq('status', 'alpa');
+    else if (type === 'hadir') query = query.eq('status', 'hadir');
+
+    // Branch filtering
+    if (userRole === 'admin_cabang') {
+      query = query.eq('branch_id', req.user.profile.branch_id);
+    } else if (branch_id) {
+      query = query.eq('branch_id', branch_id);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return res.json(data);
+  } catch (err) {
+    console.error('Detail error:', err);
+    return res.status(500).json({ error: 'Gagal memuat detail absensi.' });
   }
 });
 
