@@ -55,7 +55,7 @@ router.put('/', async (req, res) => {
       supabaseAdmin
         .from('app_settings')
         .upsert(
-          { key, value: JSON.stringify(value), updated_by: req.user.profile.id },
+          { key, value, updated_by: req.user.profile.id },
           { onConflict: 'key' }
         )
     );
