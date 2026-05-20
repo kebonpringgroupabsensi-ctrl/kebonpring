@@ -442,7 +442,13 @@ function FaceScanModal({ action, faceMatchThreshold, onVerified, onSkip, onClose
           return;
         }
 
-        const threshold = faceMatchThreshold !== undefined ? Number(faceMatchThreshold) : 0.5;
+        let thresholdValue = faceMatchThreshold;
+        if (typeof thresholdValue === 'string') {
+          thresholdValue = thresholdValue.replace(/"/g, '');
+        }
+        const threshold = (thresholdValue !== undefined && thresholdValue !== null && thresholdValue !== '') 
+          ? Number(thresholdValue) 
+          : 0.5;
         const matched = isMatch(storedDescriptor, currentDescriptor, threshold);
 
         if (matched) {

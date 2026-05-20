@@ -154,58 +154,66 @@ export default function SAPengaturan() {
         </div>
 
         {/* Face Recognition Rules */}
-        <div className="content-card" style={{ marginBottom: '1.5rem' }}>
-          <div className="content-header">
-            <h2><ScanFace size={18} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }} />Keamanan & Pengenalan Wajah</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Akurasi Pencocokan Wajah</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>
-                  {Math.round((1.0 - parseFloat(form.face_match_threshold || 0.5)) * 100)}%
-                </span>
-              </label>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Longgar (40%)</span>
-                <input
-                  type="range"
-                  min="40"
-                  max="85"
-                  step="1"
-                  value={Math.round((1.0 - parseFloat(form.face_match_threshold || 0.5)) * 100)}
-                  onChange={e => {
-                    const accuracy = parseInt(e.target.value);
-                    const threshold = (100 - accuracy) / 100;
-                    setForm({ ...form, face_match_threshold: threshold.toString() });
-                  }}
-                  style={{
-                    flex: 1,
-                    accentColor: 'var(--primary)',
-                    cursor: 'pointer',
-                    height: '6px',
-                    borderRadius: '3px'
-                  }}
-                />
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ketat (85%)</span>
+        {(() => {
+          const rawThreshold = form.face_match_threshold;
+          const parsedThreshold = parseFloat(
+            (typeof rawThreshold === 'string' ? rawThreshold.replace(/"/g, '') : rawThreshold) || 0.5
+          );
+          return (
+            <div className="content-card" style={{ marginBottom: '1.5rem' }}>
+              <div className="content-header">
+                <h2><ScanFace size={18} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }} />Keamanan & Pengenalan Wajah</h2>
               </div>
-              
-              <div style={{ 
-                marginTop: '1rem', 
-                padding: '0.75rem 1rem', 
-                borderRadius: '8px', 
-                background: 'rgba(255, 255, 255, 0.03)', 
-                border: '1px solid var(--surface-border)',
-                fontSize: '0.825rem',
-                lineHeight: '1.4',
-                color: 'var(--text-secondary)'
-              }}>
-                {getThresholdStatusLabel(parseFloat(form.face_match_threshold || 0.5))}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Akurasi Pencocokan Wajah</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>
+                      {Math.round((1.0 - parsedThreshold) * 100)}%
+                    </span>
+                  </label>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Longgar (40%)</span>
+                    <input
+                      type="range"
+                      min="40"
+                      max="85"
+                      step="1"
+                      value={Math.round((1.0 - parsedThreshold) * 100)}
+                      onChange={e => {
+                        const accuracy = parseInt(e.target.value);
+                        const threshold = (100 - accuracy) / 100;
+                        setForm({ ...form, face_match_threshold: threshold.toString() });
+                      }}
+                      style={{
+                        flex: 1,
+                        accentColor: 'var(--primary)',
+                        cursor: 'pointer',
+                        height: '6px',
+                        borderRadius: '3px'
+                      }}
+                    />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ketat (85%)</span>
+                  </div>
+                  
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    padding: '0.75rem 1rem', 
+                    borderRadius: '8px', 
+                    background: 'rgba(255, 255, 255, 0.03)', 
+                    border: '1px solid var(--surface-border)',
+                    fontSize: '0.825rem',
+                    lineHeight: '1.4',
+                    color: 'var(--text-secondary)'
+                  }}>
+                    {getThresholdStatusLabel(parsedThreshold)}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Save Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
