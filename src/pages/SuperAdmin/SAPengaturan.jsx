@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { Settings, Save, Globe, Clock, Bell, Plus, Trash2, X } from 'lucide-react';
+import { Settings, Save, Globe, Clock, Bell, Plus, Trash2, X, ScanFace } from 'lucide-react';
 
 export default function SAPengaturan() {
   const [settings, setSettings] = useState({});
@@ -21,6 +21,7 @@ export default function SAPengaturan() {
     check_out_after_hours: '4',
     max_radius_meters: '50',
     working_days: '["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"]',
+    face_match_threshold: '0.5',
   });
 
   useEffect(() => { fetchData(); }, []);
@@ -44,6 +45,7 @@ export default function SAPengaturan() {
         check_out_before_hours: s.check_out_before_hours || prev.check_out_before_hours,
         check_out_after_hours: s.check_out_after_hours || prev.check_out_after_hours,
         max_radius_meters: s.max_radius_meters || prev.max_radius_meters,
+        face_match_threshold: s.face_match_threshold !== undefined ? s.face_match_threshold : prev.face_match_threshold,
       }));
     } catch (err) {
       console.error(err);
@@ -151,6 +153,60 @@ export default function SAPengaturan() {
           </div>
         </div>
 
+        {/* Face Recognition Rules */}
+        <div className="content-card" style={{ marginBottom: '1.5rem' }}>
+          <div className="content-header">
+            <h2><ScanFace size={18} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'middle' }} />Keamanan & Pengenalan Wajah</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Akurasi Pencocokan Wajah</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>
+                  {Math.round((1.0 - parseFloat(form.face_match_threshold || 0.5)) * 100)}%
+                </span>
+              </label>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Longgar (40%)</span>
+                <input
+                  type="range"
+                  min="40"
+                  max="85"
+                  step="1"
+                  value={Math.round((1.0 - parseFloat(form.face_match_threshold || 0.5)) * 100)}
+                  onChange={e => {
+                    const accuracy = parseInt(e.target.value);
+                    const threshold = (100 - accuracy) / 100;
+                    setForm({ ...form, face_match_threshold: threshold.toString() });
+                  }}
+                  style={{
+                    flex: 1,
+                    accentColor: 'var(--primary)',
+                    cursor: 'pointer',
+                    height: '6px',
+                    borderRadius: '3px'
+                  }}
+                />
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ketat (85%)</span>
+              </div>
+              
+              <div style={{ 
+                marginTop: '1rem', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '8px', 
+                background: 'rgba(255, 255, 255, 0.03)', 
+                border: '1px solid var(--surface-border)',
+                fontSize: '0.825rem',
+                lineHeight: '1.4',
+                color: 'var(--text-secondary)'
+              }}>
+                {getThresholdStatusLabel(parseFloat(form.face_match_threshold || 0.5))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Save Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
           <button type="submit" className="action-btn" disabled={saving} style={{ minWidth: '160px' }}>
@@ -224,3 +280,17 @@ export default function SAPengaturan() {
     </>
   );
 }
+
+const getThresholdStatusLabel = (threshold) => {
+  const accuracy = Math.round((1.0 - threshold) * 100);
+  if (accuracy >= 75) {
+    return '🔒 Sangat Ketat: Tingkat keamanan tertinggi. Karyawan lain tidak akan bisa memalsukan absensi, namun membutuhkan pencahayaan yang sangat terang dan posisi wajah tegak lurus.';
+  }
+  if (accuracy >= 60) {
+    return '🛡️ Ketat (Direkomendasikan): Keamanan tinggi dengan toleransi pencocokan yang pas. Mencegah penyalahgunaan oleh orang lain tanpa mempersulit proses absensi harian.';
+  }
+  if (accuracy >= 50) {
+    return '⚙️ Standar: Keseimbangan antara kemudahan absensi dan akurasi. Masih ada kemungkinan kecil kecocokan palsu jika kemiripan wajah tinggi.';
+  }
+  return '⚠️ Longgar: Kurang aman. Sangat mudah melakukan absensi, namun rawan penyalahgunaan wajah oleh orang lain.';
+};

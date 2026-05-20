@@ -30,6 +30,7 @@ export default function KaryawanAbsen() {
   const [showScanModal, setShowScanModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [now, setNow] = useState(new Date());
+  const [settings, setSettings] = useState({});
 
   const isFaceRegistered = user?.face_registered || false;
   const hasShift = !!shift && !!shift.shifts;
@@ -46,12 +47,14 @@ export default function KaryawanAbsen() {
     setLoading(true);
     try {
       const today = new Date().toLocaleDateString('en-CA');
-      const [att, dashData] = await Promise.all([
+      const [att, dashData, s] = await Promise.all([
         api.get('/attendances/today', { date: today }),
         api.get('/dashboard/karyawan', { date: today }),
+        api.get('/settings').catch(() => ({})),
       ]);
       setAttendance(att);
       setShift(dashData.today_shift);
+      setSettings(s || {});
     } catch (err) {
       console.error(err);
     } finally {
@@ -361,6 +364,7 @@ export default function KaryawanAbsen() {
         <FaceScanModal
           userId={user?.id}
           action={pendingAction}
+          faceMatchThreshold={settings.face_match_threshold}
           onVerified={(photo) => executeAction(true, photo)}
           onSkip={() => executeAction(false)}
           onClose={() => { setShowScanModal(false); setPendingAction(null); }}
@@ -371,7 +375,7 @@ export default function KaryawanAbsen() {
 }
 
 // ─── Face Scan Verification Modal ────────────────────────────────────────────
-function FaceScanModal({ action, onVerified, onSkip, onClose }) {
+function FaceScanModal({ action, faceMatchThreshold, onVerified, onSkip, onClose }) {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -438,7 +442,8 @@ function FaceScanModal({ action, onVerified, onSkip, onClose }) {
           return;
         }
 
-        const matched = isMatch(storedDescriptor, currentDescriptor);
+        const threshold = faceMatchThreshold !== undefined ? Number(faceMatchThreshold) : 0.5;
+        const matched = isMatch(storedDescriptor, currentDescriptor, threshold);
 
         if (matched) {
           // Capture photo for audit
