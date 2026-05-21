@@ -153,6 +153,10 @@ function getTodayWIB() {
 router.post('/check-in', async (req, res) => {
   try {
     const { latitude, longitude, face_verified, date, photo } = req.body;
+
+    if (!face_verified) {
+      return res.status(400).json({ error: 'Verifikasi wajah diperlukan untuk absen masuk.' });
+    }
     const profile = req.user.profile;
     const today = date || getTodayWIB();
 
@@ -338,6 +342,10 @@ router.post('/break/end', async (req, res) => {
     const today = getTodayWIB();
     const { face_verified } = req.body;
 
+    if (!face_verified) {
+      return res.status(400).json({ error: 'Verifikasi wajah diperlukan untuk selesai istirahat.' });
+    }
+
     const { data: attendance, error: fetchError } = await supabaseAdmin
       .from('attendances')
       .select('*')
@@ -391,6 +399,10 @@ router.post('/check-out', async (req, res) => {
   try {
     const today = getTodayWIB();
     const { latitude, longitude, face_verified, photo } = req.body;
+
+    if (!face_verified) {
+      return res.status(400).json({ error: 'Verifikasi wajah diperlukan untuk absen pulang.' });
+    }
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
       .from('attendances')

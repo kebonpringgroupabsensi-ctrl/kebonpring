@@ -366,7 +366,6 @@ export default function KaryawanAbsen() {
           action={pendingAction}
           faceMatchThreshold={settings.face_match_threshold}
           onVerified={(photo) => executeAction(true, photo)}
-          onSkip={() => executeAction(false)}
           onClose={() => { setShowScanModal(false); setPendingAction(null); }}
         />
       )}
@@ -375,7 +374,7 @@ export default function KaryawanAbsen() {
 }
 
 // ─── Face Scan Verification Modal ────────────────────────────────────────────
-function FaceScanModal({ action, faceMatchThreshold, onVerified, onSkip, onClose }) {
+function FaceScanModal({ action, faceMatchThreshold, onVerified, onClose }) {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -503,14 +502,9 @@ function FaceScanModal({ action, faceMatchThreshold, onVerified, onSkip, onClose
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>{status}</p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             {!scanning && (
-              <>
-                <button onClick={handleCapture} className="action-btn" style={{ flex: 1 }}>
-                  <Camera size={18} /> Verifikasi Sekarang
-                </button>
-                <button onClick={() => { stopCamera(); onSkip(); }} className="btn-ghost">
-                  Lewati
-                </button>
-              </>
+              <button onClick={handleCapture} className="action-btn" style={{ flex: 1 }}>
+                <Camera size={18} /> Verifikasi Sekarang
+              </button>
             )}
             {scanning && <div className="loader" style={{ width: '30px', height: '30px', margin: '0 auto' }} />}
           </div>

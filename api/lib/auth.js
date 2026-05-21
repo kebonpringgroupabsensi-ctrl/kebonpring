@@ -41,7 +41,11 @@ export async function authenticateRequest(req) {
 
   if (!profile) {
     console.error(`Profile not found in database for auth user ${user.id}`);
-    const err = new Error(`Profile Not Found in Database (User ID: ${user.id})`);
+    const isServiceKeyMissing = !process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const msg = isServiceKeyMissing
+      ? `Profile Not Found in Database (User ID: ${user.id}). PENTING: SUPABASE_SERVICE_ROLE_KEY tidak ditemukan di environment variables Vercel! Silakan tambahkan key ini di dashboard Vercel.`
+      : `Profile Not Found in Database (User ID: ${user.id}). Hubungi admin untuk memastikan akun Anda terdaftar di tabel profiles.`;
+    const err = new Error(msg);
     err.statusCode = 401; // Keep 401 to force re-auth if profile is missing
     throw err;
   }
