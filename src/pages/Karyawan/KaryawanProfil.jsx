@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../ThemeContext';
 import { getUser } from '../../services/api';
-import { LogOut, User, Phone, Mail, MapPin, Building, Shield, Moon, Sun, ChevronRight } from 'lucide-react';
+import { LogOut, User, Phone, Mail, MapPin, Building, Shield, Moon, Sun, ChevronRight, ScanFace } from 'lucide-react';
+import FaceRegisterModal from '../../components/FaceRegisterModal';
 
 export default function KaryawanProfil() {
   const { isDark, toggleTheme } = useTheme();
-  const user = getUser();
+  const [user, setUser] = useState(getUser());
+  const [showFaceModal, setShowFaceModal] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -85,6 +87,32 @@ export default function KaryawanProfil() {
             </div>
           </div>
 
+          {user?.face_registered && (
+            <div className="content-card" style={{ padding: '0.5rem 1.25rem', borderRadius: '24px', margin: 0 }}>
+              <div 
+                onClick={() => setShowFaceModal(true)}
+                style={{ 
+                  padding: '1.1rem 0', 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ color: 'var(--primary)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.6rem', borderRadius: '12px' }}>
+                    <ScanFace size={20} />
+                  </div>
+                  <div>
+                    <span style={{ fontWeight: '700', fontSize: '0.95rem', display: 'block', color: 'var(--text-main)' }}>Daftar Ulang Wajah</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Perbarui data pemindaian wajah Anda</span>
+                  </div>
+                </div>
+                <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+              </div>
+            </div>
+          )}
+
           <button 
             className="action-btn" 
             onClick={handleLogout}
@@ -109,6 +137,19 @@ export default function KaryawanProfil() {
           </p>
         </div>
       </div>
+      {showFaceModal && (
+        <FaceRegisterModal
+          userId={user?.id}
+          onSuccess={() => {
+            setShowFaceModal(false);
+            const updatedUser = { ...user, face_registered: true };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            alert('Wajah berhasil didaftarkan ulang!');
+          }}
+          onClose={() => setShowFaceModal(false)}
+        />
+      )}
     </>
   );
 }

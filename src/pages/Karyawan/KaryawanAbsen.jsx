@@ -380,6 +380,7 @@ function FaceScanModal({ action, faceMatchThreshold, onVerified, onClose }) {
   const [scanning, setScanning] = useState(false);
   const [status, setStatus] = useState('Arahkan wajah Anda ke kamera');
   const [storedDescriptor, setStoredDescriptor] = useState(null);
+  const [permissionBlocked, setPermissionBlocked] = useState(false);
 
   const actionLabels = {
     check_in: 'Check In',
@@ -410,12 +411,53 @@ function FaceScanModal({ action, faceMatchThreshold, onVerified, onClose }) {
   };
 
   const startCamera = async () => {
-    try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    setStatus('Arahkan wajah Anda ke kamera');
+    setPermissionBlocked(false);
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('Browser Anda tidak mendukung akses kamera atau koneksi tidak aman (bukan HTTPS).');
+      return;
+    }
+
+    const constraintOptions = [
+      { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } } },
+      { video: { facingMode: 'user' } },
+      { video: true }
+    ];
+
+    let lastError = null;
+    let s = null;
+
+    for (const constraints of constraintOptions) {
+      try {
+        s = await navigator.mediaDevices.getUserMedia(constraints);
+        if (s) break;
+      } catch (err) {
+        lastError = err;
+        console.warn('Gagal dengan constraint:', constraints, err.name);
+      }
+    }
+
+    if (s) {
       setStream(s);
-      if (videoRef.current) videoRef.current.srcObject = s;
-    } catch (err) {
-      setStatus('Gagal akses kamera: ' + err.message);
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(e => console.error("Error playing video stream:", e));
+        };
+      }
+    } else {
+      console.error('Camera access failed completely:', lastError);
+      if (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError') {
+        setPermissionBlocked(true);
+        setStatus('Akses kamera ditolak. Silakan izinkan akses kamera untuk melakukan absensi.');
+      } else if (lastError.name === 'NotReadableError' || lastError.name === 'TrackStartError') {
+        setStatus('Kamera sedang digunakan oleh aplikasi lain. Silakan tutup aplikasi lain (WhatsApp, Zoom, dll) lalu coba lagi.');
+      } else if (lastError.name === 'NotFoundError' || lastError.name === 'DevicesNotFoundError') {
+        setStatus('Kamera tidak ditemukan di perangkat Anda.');
+      } else {
+        setStatus('Gagal akses kamera: ' + lastError.message);
+      }
     }
   };
 
@@ -490,24 +532,86 @@ function FaceScanModal({ action, faceMatchThreshold, onVerified, onClose }) {
           <button className="modal-close" onClick={() => { stopCamera(); onClose(); }}><XCircle size={20} /></button>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '1', background: '#000', borderRadius: '16px', overflow: 'hidden', marginBottom: '1rem' }}>
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {/* Face guide overlay */}
-            <div style={{
-              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          {permissionBlocked ? (
+            <div style={{ 
+              width: '100%', 
+              background: 'var(--surface)', 
+              border: '1px solid var(--surface-border)', 
+              borderRadius: '16px', 
+              padding: '1.25rem', 
+              marginBottom: '1rem',
+              textAlign: 'left',
+              boxSizing: 'border-box',
+              maxHeight: '350px',
+              overflowY: 'auto'
             }}>
-              <div style={{ width: '60%', aspectRatio: '1', border: '3px solid var(--primary)', borderRadius: '50%', opacity: 0.7 }} />
-            </div>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>{status}</p>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-            {!scanning && (
-              <button onClick={handleCapture} className="action-btn" style={{ flex: 1 }}>
-                <Camera size={18} /> Verifikasi Sekarang
+              <h3 style={{ color: 'var(--error)', marginTop: 0, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: '800' }}>
+                🔒 Akses Kamera Diblokir
+              </h3>
+              <p style={{ color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1.5, fontSize: '0.82rem' }}>
+                Aplikasi membutuhkan izin kamera untuk verifikasi absensi. Silakan aktifkan izin kamera dengan panduan berikut:
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.8rem' }}>
+                <div>
+                  <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '0.25rem' }}>🌐 Android (Google Chrome)</strong>
+                  <ol style={{ paddingLeft: '1.2rem', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <li>Klik ikon 🔒 (gembok) atau setelan di sebelah kiri alamat web di bagian atas layar.</li>
+                    <li>Pilih <strong>Izin (Permissions)</strong> atau <strong>Setelan Situs</strong>.</li>
+                    <li>Ubah izin <strong>Kamera</strong> menjadi <strong>Izinkan (Allow)</strong>.</li>
+                    <li>Segarkan (refresh) halaman ini.</li>
+                  </ol>
+                </div>
+
+                <div style={{ borderTop: '1px dashed var(--surface-border)', paddingTop: '0.5rem' }}>
+                  <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '0.25rem' }}>🍎 iPhone / iPad (Safari)</strong>
+                  <ol style={{ paddingLeft: '1.2rem', margin: 0, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <li>Buka aplikasi <strong>Pengaturan (Settings)</strong> perangkat Anda.</li>
+                    <li>Cari dan pilih browser <strong>Safari</strong>.</li>
+                    <li>Di bagian bawah, pilih <strong>Kamera (Camera)</strong>.</li>
+                    <li>Pilih <strong>Izinkan (Allow)</strong>.</li>
+                    <li>Kembali ke Safari dan segarkan (refresh) halaman ini.</li>
+                  </ol>
+                </div>
+
+                <div style={{ borderTop: '1px dashed var(--surface-border)', paddingTop: '0.5rem' }}>
+                  <strong style={{ color: 'var(--error)', display: 'block', marginBottom: '0.25rem' }}>📱 Aplikasi Sosial (WhatsApp, Instagram, dll.)</strong>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    Jika Anda membuka link ini lewat chat WhatsApp atau aplikasi lain, silakan klik tombol <strong>titik tiga (⋮)</strong> di kanan atas layar, lalu pilih <strong>Buka di Browser Chrome / Safari</strong>.
+                  </p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={startCamera} 
+                className="action-btn" 
+                style={{ width: '100%', marginTop: '1.25rem', padding: '0.75rem', fontSize: '0.85rem' }}
+              >
+                Coba Aktifkan Kamera Lagi
               </button>
-            )}
-            {scanning && <div className="loader" style={{ width: '30px', height: '30px', margin: '0 auto' }} />}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '1', background: '#000', borderRadius: '16px', overflow: 'hidden', marginBottom: '1rem' }}>
+                <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {/* Face guide overlay */}
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{ width: '60%', aspectRatio: '1', border: '3px solid var(--primary)', borderRadius: '50%', opacity: 0.7 }} />
+                </div>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>{status}</p>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                {!scanning && (
+                  <button onClick={handleCapture} className="action-btn" style={{ flex: 1 }}>
+                    <Camera size={18} /> Verifikasi Sekarang
+                  </button>
+                )}
+                {scanning && <div className="loader" style={{ width: '30px', height: '30px', margin: '0 auto' }} />}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
