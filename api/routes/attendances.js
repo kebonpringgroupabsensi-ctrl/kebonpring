@@ -348,7 +348,7 @@ router.post('/break/end', async (req, res) => {
 
     const { data: attendance, error: fetchError } = await supabaseAdmin
       .from('attendances')
-      .select('*')
+      .select('*, shifts(max_break_minutes)')
       .eq('employee_id', req.user.profile.id)
       .eq('date', today)
       .maybeSingle();
@@ -362,9 +362,12 @@ router.post('/break/end', async (req, res) => {
     const breakStart = new Date(attendance.start_break_time);
     const breakMinutes = Math.round((now - breakStart) / 60000);
 
-    // Check if break is too long
+    // Check if break is too long — use shift's max_break_minutes with proper fallback
     const maxBreak = attendance.shifts?.max_break_minutes || 60;
     const isBreakLate = breakMinutes > maxBreak;
+    const lateBreakMinutes = breakMinutes - maxBreak;
+
+    console.log(`[BREAK-END DEBUG] employee=${req.user.profile.id}, breakMinutes=${breakMinutes}, maxBreak=${maxBreak}, shiftMaxBreak=${attendance.shifts?.max_break_minutes}, isBreakLate=${isBreakLate}`);
 
     const { data, error } = await supabaseAdmin
       .from('attendances')
@@ -372,7 +375,7 @@ router.post('/break/end', async (req, res) => {
         end_break_time: now.toISOString(),
         total_break_minutes: breakMinutes,
         is_break_late: isBreakLate,
-        notes: isBreakLate ? `Terlambat habis istirahat ${breakMinutes - maxBreak} menit` : attendance.notes
+        notes: isBreakLate ? `Terlambat habis istirahat ${lateBreakMinutes} menit` : attendance.notes
       })
       .eq('id', attendance.id)
       .select()
@@ -380,7 +383,7 @@ router.post('/break/end', async (req, res) => {
 
     if (error) throw error;
     return res.json({
-      message: isLateBreak 
+      message: isBreakLate 
         ? `Istirahat selesai. Anda terlambat ${lateBreakMinutes} menit kembali bekerja.`
         : `Istirahat selesai (${breakMinutes} menit). Semangat bekerja kembali!`,
       attendance: data,
