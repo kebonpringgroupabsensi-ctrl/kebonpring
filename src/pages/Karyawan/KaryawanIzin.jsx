@@ -25,6 +25,7 @@ export default function KaryawanIzin() {
     longitude: null,
   });
   const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState('');
   const [uploading, setUploading] = useState(false);
   
   React.useEffect(() => {
@@ -69,18 +70,33 @@ export default function KaryawanIzin() {
     onError: (err) => alert(err.message),
   });
   const getLocation = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocationError('Perangkat Anda tidak mendukung GPS. Tidak dapat mengajukan izin.');
+      return;
+    }
     setLocationLoading(true);
+    setLocationError('');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setFormData(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
         setLocationLoading(false);
+        setLocationError('');
       },
       (err) => {
         console.error('Error getting location:', err);
         setLocationLoading(false);
+        let msg = 'Gagal mendeteksi lokasi. ';
+        if (err.code === 1) {
+          msg += 'Anda harus mengizinkan akses lokasi untuk mengajukan izin/sakit.';
+        } else if (err.code === 2) {
+          msg += 'Lokasi tidak tersedia. Pastikan GPS aktif.';
+        } else if (err.code === 3) {
+          msg += 'Waktu deteksi habis. Silakan coba lagi.';
+        }
+        setLocationError(msg);
+        setFormData(prev => ({ ...prev, latitude: null, longitude: null }));
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -108,7 +124,17 @@ export default function KaryawanIzin() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(formData);
+    if (!formData.latitude || !formData.longitude) {
+      alert('Lokasi belum terdeteksi. Pastikan GPS aktif dan izinkan akses lokasi sebelum mengirim pengajuan.');
+      return;
+    }
+    // Map attachment to attachment_url for backend
+    const payload = {
+      ...formData,
+      attachment_url: formData.attachment || null,
+    };
+    delete payload.attachment;
+    mutation.mutate(payload);
   };
 
   const formatDate = (dateStr) => {
@@ -282,17 +308,39 @@ export default function KaryawanIzin() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Lokasi Saat Ini</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: formData.latitude ? 'var(--secondary)' : 'var(--text-muted)' }}>
+                <label className="form-label">Lokasi Saat Ini <span style={{ color: 'var(--error)', fontWeight: '800' }}>*</span></label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: formData.latitude ? 'var(--secondary)' : locationError ? 'var(--error)' : 'var(--text-muted)' }}>
                   <MapPin size={16} />
-                  {locationLoading ? 'Mendeteksi lokasi...' : formData.latitude ? `${formData.latitude.toFixed(5)}, ${formData.longitude.toFixed(5)}` : 'Lokasi tidak terdeteksi'}
+                  {locationLoading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="loader" style={{ width: '14px', height: '14px' }} /> Mendeteksi lokasi...
+                    </span>
+                  ) : formData.latitude ? (
+                    `${formData.latitude.toFixed(5)}, ${formData.longitude.toFixed(5)}`
+                  ) : (
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <span>{locationError || 'Lokasi belum terdeteksi'}</span>
+                      <button
+                        type="button"
+                        onClick={getLocation}
+                        style={{
+                          background: 'none', border: '1px solid var(--primary)', color: 'var(--primary)',
+                          padding: '0.25rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700',
+                          cursor: 'pointer', width: 'fit-content'
+                        }}
+                      >
+                        <MapPin size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }} />
+                        Coba Deteksi Ulang
+                      </button>
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="modal-footer" style={{ padding: '1rem 0 0' }}>
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
-                <button type="submit" className="action-btn" disabled={mutation.isLoading || uploading}>
-                  {mutation.isLoading ? 'Mengirim...' : 'Kirim Pengajuan'}
+                <button type="submit" className="action-btn" disabled={mutation.isLoading || uploading || !formData.latitude || !formData.longitude || locationLoading}>
+                  {mutation.isLoading ? 'Mengirim...' : !formData.latitude ? '⚠ Lokasi Diperlukan' : 'Kirim Pengajuan'}
                 </button>
               </div>
             </form>
