@@ -64,13 +64,27 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { leave_type, start_date, end_date, reason, attachment, latitude, longitude } = req.body;
+    const { leave_type, start_date, end_date, reason, attachment, attachment_url, latitude, longitude } = req.body;
 
     if (!leave_type || !start_date || !end_date) {
       return res.status(400).json({ error: 'Jenis izin, tanggal mulai, dan tanggal selesai wajib diisi.' });
     }
 
-    let finalAttachmentUrl = null;
+    if (!attachment && !attachment_url) {
+      return res.status(400).json({ error: 'Bukti foto wajib diunggah untuk pengajuan izin.' });
+    }
+
+    // Validate location - must be present for all leave requests
+    if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+      return res.status(400).json({ error: 'Lokasi wajib terdeteksi sebelum mengajukan izin/sakit. Pastikan GPS aktif dan izinkan akses lokasi.' });
+    }
+
+    // Validate that latitude and longitude are valid numbers
+    if (typeof latitude !== 'number' || typeof longitude !== 'number' || isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: 'Data lokasi tidak valid. Silakan coba deteksi ulang lokasi Anda.' });
+    }
+
+    let finalAttachmentUrl = attachment_url || null;
     if (attachment) {
       try {
         const fileName = `izin_${req.user.profile.full_name}_${new Date().getTime()}.jpg`;

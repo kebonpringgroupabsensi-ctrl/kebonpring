@@ -128,6 +128,10 @@ export default function KaryawanIzin() {
       alert('Lokasi belum terdeteksi. Pastikan GPS aktif dan izinkan akses lokasi sebelum mengirim pengajuan.');
       return;
     }
+    if (!formData.attachment) {
+      alert('Bukti foto wajib diunggah.');
+      return;
+    }
     // Map attachment to attachment_url for backend
     const payload = {
       ...formData,
@@ -270,7 +274,7 @@ export default function KaryawanIzin() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Bukti Foto / Surat (Opsional)</label>
+                <label className="form-label">Bukti Foto / Surat <span style={{ color: 'var(--error)', fontWeight: '800' }}>*</span></label>
                 <div style={{ position: 'relative' }}>
                   <input 
                     type="file" 
@@ -339,8 +343,8 @@ export default function KaryawanIzin() {
 
               <div className="modal-footer" style={{ padding: '1rem 0 0' }}>
                 <button type="button" className="btn-ghost" onClick={() => setShowModal(false)}>Batal</button>
-                <button type="submit" className="action-btn" disabled={mutation.isLoading || uploading || !formData.latitude || !formData.longitude || locationLoading}>
-                  {mutation.isLoading ? 'Mengirim...' : !formData.latitude ? '⚠ Lokasi Diperlukan' : 'Kirim Pengajuan'}
+                <button type="submit" className="action-btn" disabled={mutation.isLoading || uploading || !formData.latitude || !formData.longitude || !formData.attachment || locationLoading}>
+                  {mutation.isLoading ? 'Mengirim...' : !formData.latitude ? '⚠ Lokasi Diperlukan' : !formData.attachment ? '⚠ Foto Diperlukan' : 'Kirim Pengajuan'}
                 </button>
               </div>
             </form>
